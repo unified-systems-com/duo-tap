@@ -1,0 +1,20 @@
+manifest_version = "0"
+plugin_version = "0.1.0"
+requires_tap = ">=0.2.1"
+slug = "duo"
+name = "TAP Duo"
+description = "Duo multi-factor authentication as grid vocabulary: v0 carries one outer node, the Duo account, so a design can place it before anything is collected."
+
+# Pure Python, no dependencies, no crypto (spec-fips.md, req-tap-plugin-manifest-v0-fips).
+[fips]
+status = "compatible"
+
+[models]
+duo__duo_account = "tap_plugin.duo.models.duo_account.DuoAccount"
+
+# In-package boot record (req-boot-bootstrap-records-in-package). Digest is the canonical sha256
+# of the record; regenerate with scripts/boot-record-hash --refresh in a core checkout.
+[[boot.records]]
+name = "ci"
+description = "RESERVED NAME (req-boot-bootstrap-ci-record): the stack this plugin's own tests run in — depends_on closure (empty) + self, offline, credential-free. The consumer flips self to editable."
+sha256 = "86555984a6210703bfafeb080a4cf787ff3117129f3ec76138a5fd96855b82ad"
