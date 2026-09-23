@@ -1,0 +1,37 @@
+/* duo-posture (req-duo-panel-posture). The card system follows git-serious-double-tap's strip:
+   a quiet warm ground, white cards with a state rail, hairlines, tabular digits, colour spent only
+   on state — and every state also carries its word and number. The look tone (purple) is the
+   not-observed state, never a severity. */
+.duo-posture { --duo-ink: #1b1d22; --duo-muted: #5d6270; --duo-faint: #9a9fab; --duo-ground: #f1f0ec; --duo-surface: #ffffff;
+  --duo-edge: #d8d6cf; --duo-rule: #e7e5df; --duo-link: #1e4f8a; --duo-bad: #b42318; --duo-warn: #a15c00; --duo-good: #1f7a3a;
+  --duo-look: #6f42c1; --duo-brand: #3b8526;
+  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.4;
+  color: var(--duo-ink); background: var(--duo-ground); padding: 1.1rem 1.6rem 1.4rem; }
+.duo-posture a { color: var(--duo-link); text-decoration: none; }
+.duo-posture a:hover, .duo-posture a:focus { text-decoration: underline; text-underline-offset: 0.12em; }
+.duo-posture__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 1.4rem; margin-bottom: 0.9rem; }
+.duo-posture__title { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+.duo-posture__facts { margin: 0; display: flex; flex-wrap: wrap; gap: 0.2rem 1.2rem; font-size: 0.85rem; color: var(--duo-muted); }
+.duo-posture__facts b { color: var(--duo-ink); font-weight: 600; }
+.duo-posture__hb--allow { color: var(--duo-warn) !important; }
+.duo-posture__hb--deny { color: var(--duo-good) !important; }
+.duo-posture__hb--unknown { color: var(--duo-look) !important; }
+.duo-posture__warn { color: var(--duo-warn); }
+.duo-posture__error { color: var(--duo-bad); margin: 0.4rem 0; }
+.duo-posture__empty { color: var(--duo-muted); margin: 0.2rem 0 0.9rem; max-width: 70rem; }
+.duo-posture__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr)); gap: 1rem 1.2rem; align-items: start; }
+.duo-posture__card { background: var(--duo-surface); border: 1px solid var(--duo-edge); border-left: 4px solid var(--duo-brand);
+  border-radius: 3px; padding: 0.55rem 0.85rem 0.7rem; box-shadow: 0 1px 2px rgba(27, 29, 34, 0.06); min-width: 0; }
+.duo-posture__card-title { margin: 0 0 0.45rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--duo-rule);
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--duo-muted); }
+.duo-posture__tiles { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.5rem 0.9rem; }
+.duo-posture__tile { margin: 0; min-width: 0; }
+.duo-posture__tile dt { font-size: 0.78rem; color: var(--duo-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.duo-posture__tile dd { margin: 0; display: flex; align-items: baseline; gap: 0.4rem; }
+.duo-posture__value { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.duo-posture__note { font-size: 0.75rem; color: var(--duo-faint); white-space: nowrap; }
+.duo-posture__tile--bad .duo-posture__value { color: var(--duo-bad); }
+.duo-posture__tile--warn .duo-posture__value { color: var(--duo-warn); }
+.duo-posture__tile--good .duo-posture__value { color: var(--duo-good); }
+.duo-posture__tile--look .duo-posture__value { color: var(--duo-look); }
+.duo-posture__tile--bad .duo-posture__note { color: var(--duo-bad); }

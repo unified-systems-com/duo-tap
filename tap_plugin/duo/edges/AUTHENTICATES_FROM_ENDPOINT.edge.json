@@ -1,0 +1,14 @@
+{
+  "slug": "AUTHENTICATES_FROM_ENDPOINT__duo",
+  "name": "Authenticates From Endpoint",
+  "description": "A Duo user has authenticated from an endpoint Duo recorded. Duo associates an endpoint with a user by the email it reports; the collector resolves that to the user.",
+  "sources": [
+    "duo__duo_user"
+  ],
+  "targets": [
+    "duo__duo_endpoint"
+  ],
+  "default_dimensions": {
+    "duo.surface": "device_trust"
+  }
+}

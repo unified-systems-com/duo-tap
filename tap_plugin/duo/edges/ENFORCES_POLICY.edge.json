@@ -1,0 +1,43 @@
+{
+  "slug": "ENFORCES_POLICY__duo",
+  "name": "Enforces Policy",
+  "description": "A Duo application enforces a custom policy — for all its users (apply_type app) or for the members of specific groups (apply_type group_app, a group policy). An application with no app-level edge inherits the account's Global Policy; inheritance is derived, never stored as an edge.",
+  "sources": [
+    "duo__duo_application"
+  ],
+  "targets": [
+    "duo__duo_policy"
+  ],
+  "default_dimensions": {
+    "duo.surface": "access"
+  },
+  "property_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "apply_type"
+    ],
+    "properties": {
+      "apply_type": {
+        "type": "string",
+        "enum": [
+          "app",
+          "group_app"
+        ],
+        "description": "Where the policy is attached (Duo's policy_applies_to.apply_type): `app` — every user of the application; `group_app` — a group policy, effective only for members of `group_names` in this application."
+      },
+      "group_names": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "For a group policy: the groups it targets in this application, by name. Absent for apply_type app."
+      },
+      "group_position": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "For a group policy: its position in the application's group-policy stack (Duo's group_position). Order decides which group policy wins for a user in several groups."
+      }
+    }
+  }
+}

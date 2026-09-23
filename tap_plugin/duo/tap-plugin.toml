@@ -1,9 +1,9 @@
 manifest_version = "0"
-plugin_version = "0.1.0"
+plugin_version = "0.2.0"
 requires_tap = ">=0.2.1"
 slug = "duo"
 name = "TAP Duo"
-description = "Duo multi-factor authentication as grid vocabulary: v0 carries one outer node, the Duo account, so a design can place it before anything is collected."
+description = "Duo multi-factor authentication as grid vocabulary: the account, its users and groups, their authenticators (phones, hardware tokens, WebAuthn credentials, bypass codes), the protected applications and the policies they enforce, administrators and endpoints — and the /duo operator page over them."
 
 # Pure Python, no dependencies, no crypto (spec-fips.md, req-tap-plugin-manifest-v0-fips).
 [fips]
@@ -11,10 +11,38 @@ status = "compatible"
 
 [models]
 duo__duo_account = "tap_plugin.duo.models.duo_account.DuoAccount"
+duo__duo_user = "tap_plugin.duo.models.duo_user.DuoUser"
+duo__duo_group = "tap_plugin.duo.models.duo_group.DuoGroup"
+duo__duo_phone = "tap_plugin.duo.models.duo_phone.DuoPhone"
+duo__duo_hardware_token = "tap_plugin.duo.models.duo_hardware_token.DuoHardwareToken"
+duo__duo_webauthn_credential = "tap_plugin.duo.models.duo_webauthn_credential.DuoWebauthnCredential"
+duo__duo_bypass_code = "tap_plugin.duo.models.duo_bypass_code.DuoBypassCode"
+duo__duo_application = "tap_plugin.duo.models.duo_application.DuoApplication"
+duo__duo_policy = "tap_plugin.duo.models.duo_policy.DuoPolicy"
+duo__duo_administrator = "tap_plugin.duo.models.duo_administrator.DuoAdministrator"
+duo__duo_endpoint = "tap_plugin.duo.models.duo_endpoint.DuoEndpoint"
+
+[edges]
+HOLDS_ACCOUNT_OBJECT__duo = "edges/HOLDS_ACCOUNT_OBJECT.edge.json"
+MEMBER_OF_GROUP__duo = "edges/MEMBER_OF_GROUP.edge.json"
+ENROLLS_PHONE__duo = "edges/ENROLLS_PHONE.edge.json"
+ENROLLS_HARDWARE_TOKEN__duo = "edges/ENROLLS_HARDWARE_TOKEN.edge.json"
+ENROLLS_WEBAUTHN_CREDENTIAL__duo = "edges/ENROLLS_WEBAUTHN_CREDENTIAL.edge.json"
+HOLDS_BYPASS_CODE__duo = "edges/HOLDS_BYPASS_CODE.edge.json"
+AUTHENTICATES_FROM_ENDPOINT__duo = "edges/AUTHENTICATES_FROM_ENDPOINT.edge.json"
+PERMITS_GROUP__duo = "edges/PERMITS_GROUP.edge.json"
+ENFORCES_POLICY__duo = "edges/ENFORCES_POLICY.edge.json"
+REQUESTS_SECOND_FACTOR__duo = "edges/REQUESTS_SECOND_FACTOR.edge.json"
+ISSUES_SSO_ASSERTION__duo = "edges/ISSUES_SSO_ASSERTION.edge.json"
+
+# The /duo page (req-duo-page): page, account-map graph panel + projection/elevation/layout, the
+# posture strip, seven tables and their searches. No instance data.
+[grift]
+duo_page = "grift/duo-page.grift.json"
 
 # In-package boot record (req-boot-bootstrap-records-in-package). Digest is the canonical sha256
 # of the record; regenerate with scripts/boot-record-hash --refresh in a core checkout.
 [[boot.records]]
 name = "ci"
 description = "RESERVED NAME (req-boot-bootstrap-ci-record): the stack this plugin's own tests run in — depends_on closure (empty) + self, offline, credential-free. The consumer flips self to editable."
-sha256 = "86555984a6210703bfafeb080a4cf787ff3117129f3ec76138a5fd96855b82ad"
+sha256 = "fc24553d766629e1f1c26e8c2dacc399d3cdb82d473e36047d98f9cfa98c6594"

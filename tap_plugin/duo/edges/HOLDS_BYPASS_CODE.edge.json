@@ -1,0 +1,14 @@
+{
+  "slug": "HOLDS_BYPASS_CODE__duo",
+  "name": "Holds Bypass Code",
+  "description": "A Duo user holds an outstanding bypass code. Containment: the code exists only for its user.",
+  "sources": [
+    "duo__duo_user"
+  ],
+  "targets": [
+    "duo__duo_bypass_code"
+  ],
+  "default_dimensions": {
+    "duo.surface": "authenticators"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "MEMBER_OF_GROUP__duo",
+  "name": "Member Of Group",
+  "description": "A Duo user is a member of a Duo group. Group membership is what PERMITTED_GROUPS user access and group policies resolve through.",
+  "sources": [
+    "duo__duo_user"
+  ],
+  "targets": [
+    "duo__duo_group"
+  ],
+  "default_dimensions": {
+    "duo.surface": "directory"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "slug": "REQUESTS_SECOND_FACTOR__duo",
+  "name": "Requests Second Factor",
+  "description": "Some system sends its users to Duo for a second factor through this Duo application — Okta using Duo as an authenticator, a VPN or RADIUS client through the Duo Authentication Proxy, SSH hosts running duo_unix, RDP hosts, a web app using the Web SDK. The source is deliberately open (omitted): the protected system belongs to another plugin (an Okta org, a host, a VPN), and naming those types here would make duo depend on each of them. The source initiates the request; Duo answers it.",
+  "targets": [
+    "duo__duo_application"
+  ],
+  "default_dimensions": {
+    "duo.surface": "access"
+  },
+  "property_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "mechanism": {
+        "type": "string",
+        "enum": [
+          "universal_prompt",
+          "traditional_prompt",
+          "auth_api",
+          "auth_proxy_radius",
+          "auth_proxy_ldap",
+          "other"
+        ],
+        "description": "How the system reaches Duo: the Universal Prompt (OIDC redirect), the retired traditional iframe prompt, direct Auth API calls, or the Duo Authentication Proxy as RADIUS or LDAP. `other` for a mechanism not listed."
+      },
+      "fail_mode": {
+        "type": "string",
+        "enum": [
+          "safe",
+          "secure"
+        ],
+        "description": "What the client does when Duo is unreachable: `safe` lets the user in without a second factor (fail open), `secure` denies (fail closed). Configured on the client (duo_unix, the Authentication Proxy, Windows Logon), not in Duo — so it is observable only from the protected system's configuration. Absent means not observed."
+      }
+    }
+  }
+}

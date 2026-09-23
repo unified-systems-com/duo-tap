@@ -1,4 +1,4 @@
-"""Behaviour tests for duo__duo_account (req-duo-model)."""
+"""Behaviour tests for duo__duo_account (req-duo-account)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ TYPE = "duo__duo_account"
 @pytest.mark.django_db
 class TestDuoAccount:
     def test_create_with_name_only(self) -> None:
-        """req-duo-model-1: a design-phase node needs only its name."""
+        """req-duo-account-1: a design-phase node needs only its name."""
         result = write_batch(
             [WriteOperation(verb="create_node", type_slug=TYPE, payload={"name": "staging"})],
             caller_context=CallerContext(),
@@ -25,7 +25,7 @@ class TestDuoAccount:
         assert row.api_hostname == ""
 
     def test_name_required(self) -> None:
-        """req-duo-model-2: a write without a name is refused."""
+        """req-duo-account-2: a write without a name is refused."""
         result = write_batch(
             [WriteOperation(verb="create_node", type_slug=TYPE, payload={"api_hostname": "x"})],
             caller_context=CallerContext(),
@@ -34,7 +34,7 @@ class TestDuoAccount:
 
 
 def test_keyed_by_name() -> None:
-    """req-duo-model-3: the key rests only on a field the model carries."""
+    """req-duo-account-4: the key rests only on a field the model carries."""
     assert DuoAccount.NATURAL_KEY == ("name",)
     names = {f.name for f in DuoAccount._meta.get_fields()}
     assert all(k in names for k in DuoAccount.NATURAL_KEY)
