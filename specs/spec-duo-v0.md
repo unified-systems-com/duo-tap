@@ -146,6 +146,7 @@ Groups are how Duo expresses 'who may use this application' (`PERMITTED_GROUPS` 
 | req-duo-group-2 | Key Field Required | Implemented | A write without `name` is refused. | `test_required_field_enforced` |
 | req-duo-group-3 | Surface Dimension | Implemented | New nodes carry default dimensions `{"duo.surface": "directory"}`, and never `dcom`. | `test_surface_dimension` |
 | req-duo-group-4 | Keyed On Its Own Fields | Implemented | `NATURAL_KEY = ('name',)`, every key a model field. | `test_every_key_is_a_field` |
+| req-duo-group-5 | Same Name, Two Accounts | Implemented | Two accounts each holding a group of the same name hold two entities; retiring one account leaves the other's group live. The name key is a design-phase key and is not consulted on the write path (req-grid-entity-natural-key-9); before identity is enforced on writes, the key moves to `group_id` with the collector. | `test_same_name_in_two_accounts_stays_two_objects` |
 
 ---
 ### Duo Phone

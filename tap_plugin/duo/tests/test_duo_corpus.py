@@ -207,3 +207,21 @@ class TestContainment:
         live = {str(x) for x in Entity.objects.filter(deleted_at__isnull=True).values_list("id", flat=True)}
         assert e["alice_phone"] in live
         assert e["alice_key"] not in live
+
+
+@pytest.mark.django_db
+def test_same_name_in_two_accounts_stays_two_objects() -> None:
+    """req-duo-group-5: name-keyed design types do not merge across accounts — two accounts each
+    holding a group named "engineers" hold two entities, and retiring one account leaves the
+    other's group live. (The natural key is not consulted on the write path today,
+    req-grid-entity-natural-key-9; the key moves to Duo's own ids with req-duo-collector.)"""
+    a = create_node("duo__duo_account", {"name": "one"}).entity_id
+    b = create_node("duo__duo_account", {"name": "two"}).entity_id
+    ga = create_node("duo__duo_group", {"name": "engineers"}).entity_id
+    gb = create_node("duo__duo_group", {"name": "engineers"}).entity_id
+    assert ga != gb
+    assert _edge(a, ga, "HOLDS_ACCOUNT_OBJECT__duo").success
+    assert _edge(b, gb, "HOLDS_ACCOUNT_OBJECT__duo").success
+    assert delete_node(a, cascade="contained").success
+    live = {str(x) for x in Entity.objects.filter(deleted_at__isnull=True).values_list("id", flat=True)}
+    assert str(gb) in live and str(ga) not in live
