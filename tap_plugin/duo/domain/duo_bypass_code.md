@@ -49,7 +49,8 @@ The documented read is the Admin API with an Admin API application granted *Gran
 
 - `bypass_code_id` — Duo's id for the code. The natural key. The code itself is never stored.
 - `created` — When the code was issued.
-- `expiration` — When the code expires. On an observed code, null is Duo's own null: the code does not expire. (A code node exists only once observed, so null here never means 'not observed'.)
+- `expires` — Whether the code expires: true when Duo reported an expiration (in `expiration`), false when Duo reported none — the code never expires — and null when not observed. Kept apart from `expiration` because a null timestamp cannot say which of 'never' and 'not read' it means.
+- `expiration` — When the code expires, if it does (`expires` true). Null means either no expiration or not observed; `expires` says which.
 - `reuse_count` — Remaining uses as Duo reports it; Duo's semantics for 0/null (unlimited) are recorded as reported, not reinterpreted.
 - `admin_email` — The email of the administrator who created the code, as reported. Attribution text, not a link: email is not identity, so no edge to an administrator is drawn from it.
 - `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

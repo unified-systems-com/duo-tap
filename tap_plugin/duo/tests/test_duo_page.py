@@ -147,6 +147,7 @@ class TestSearches:
                 "username": "bob",
                 "user_status": "bypass",
                 "created": None,
+                "expires": False,
                 "expiration": None,
                 "reuse_count": 1,
                 "issued_by": "helpdesk@example.com",
@@ -197,6 +198,32 @@ class TestPosture:
         assert tiles[("access", "Admin API applications")].note == ""  # read-only grants
         assert tiles[("admin", "Without WebAuthn")].value == 0
         assert tiles[("devices", "Posture not reported")].value == 1
+
+    def test_unobserved_expiry_is_not_never(self) -> None:
+        """req-duo-panel-posture-6: a bypass code whose expiry was not observed is not counted as never
+        expiring; only expires=false is."""
+        from tap_grid.services import WriteOperation, create_node, write_batch
+
+        e = seed_estate()
+        code = create_node("duo__duo_bypass_code", {"bypass_code_id": "DBUNKNOWN00000000001"}).entity_id
+        assert write_batch(
+            [
+                WriteOperation(
+                    verb="create_edge",
+                    from_target=e["bob"],
+                    to_target=code,
+                    edge_type="HOLDS_BYPASS_CODE__duo",
+                    payload={},
+                )
+            ]
+        ).success
+        tiles = {
+            (s.key, t.label): t
+            for s in build_posture(_fetch("Duo Federal"), "Duo Federal")["sections"]
+            for t in s.tiles
+        }
+        assert tiles[("coverage", "Bypass codes")].value == 2
+        assert tiles[("coverage", "Bypass codes")].note == "1 never expire, 1 expiry not observed"
 
     def test_several_accounts_without_a_choice(self) -> None:
         """req-duo-panel-posture-4: with several accounts and no ?account=, the strip offers each."""

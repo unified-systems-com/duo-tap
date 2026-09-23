@@ -450,7 +450,7 @@
           "node": {
             "name": "Outstanding bypass codes",
             "slug": "duo-bypass-codes",
-            "description": "Every bypass code a user holds right now: a passcode that satisfies MFA with no authenticator. Expiration blank on an observed code means it never expires.",
+            "description": "Every bypass code a user holds right now: a passcode that satisfies MFA with no authenticator. ✕ under Expires? means Duo reported no expiration — the code never expires; a dash means the expiry was not observed.",
             "view": "tap_web/panels/table_panel.html",
             "editor_view": "",
             "config": {
@@ -484,10 +484,18 @@
                   }
                 },
                 {
-                  "field": "expiration",
-                  "title": "Expires",
+                  "field": "expires",
+                  "title": "Expires?",
                   "headerSort": true,
-                  "header_tooltip": "When the code expires; blank means it does not.",
+                  "header_tooltip": "✓ the code expires (see the next column); ✕ Duo reported no expiration — it never expires; – not observed.",
+                  "width": 100,
+                  "formatter": "tickCross"
+                },
+                {
+                  "field": "expiration",
+                  "title": "Expires at",
+                  "headerSort": true,
+                  "header_tooltip": "When the code expires, if it does.",
                   "width": 170,
                   "formatter": "datetime"
                 },
@@ -718,7 +726,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -751,7 +759,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -784,7 +792,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -801,7 +809,7 @@
           },
           "node": {
             "name": "duo — account map: phones and hardware tokens",
-            "description": "Scene search: the phones and hardware tokens the selected account holds. The layout folds them into one tile per enrolled-device type (Duo Push phones, SMS/voice-only phones, hardware tokens) and removes the individual nodes, so their count is what the map shows.",
+            "description": "Scene search: the phones and hardware tokens the selected account holds. The layout folds them into one tile per enrolled-device type (phones, hardware tokens) and hides the individual nodes, so their count is what the map shows; the strength split (Duo Push versus SMS/voice-only) is the posture strip's.",
             "search_type": "gryphon",
             "root": "node",
             "definition": {
@@ -817,7 +825,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -834,7 +842,7 @@
           },
           "node": {
             "name": "duo — account map: WebAuthn credentials",
-            "description": "Scene search: the WebAuthn credentials enrolled by the selected account's users. Folded by the layout into security-key and platform-authenticator tiles.",
+            "description": "Scene search: the WebAuthn credentials enrolled by the selected account's users. Folded by the layout into one WebAuthn tile with its count; the security-key versus platform split is the posture strip's.",
             "search_type": "gryphon",
             "root": "node",
             "definition": {
@@ -850,7 +858,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -883,7 +891,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -916,7 +924,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -949,7 +957,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -982,7 +990,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -1015,7 +1023,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -1048,7 +1056,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -1065,14 +1073,14 @@
           },
           "node": {
             "name": "duo — outstanding bypass codes of an account",
-            "description": "Projection mode: one row per bypass code held by a user of the selected account — who holds it, when it expires (null on an observed code means it does not expire), remaining uses, and who issued it.",
+            "description": "Projection mode: one row per bypass code held by a user of the selected account — who holds it, whether and when it expires (expires false = Duo reported no expiration; null = not observed), remaining uses, and who issued it.",
             "search_type": "gryphon",
             "root": "node",
             "definition": {
               "query": [
                 "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(u:duo__duo_user)-[:HOLDS_BYPASS_CODE__duo]->(b:duo__duo_bypass_code)",
                 "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
-                "RETURN u.data.username AS username, u.data.status AS user_status, b.data.created AS created, b.data.expiration AS expiration, b.data.reuse_count AS reuse_count, b.data.admin_email AS issued_by"
+                "RETURN u.data.username AS username, u.data.status AS user_status, b.data.created AS created, b.data.expires AS expires, b.data.expiration AS expiration, b.data.reuse_count AS reuse_count, b.data.admin_email AS issued_by"
               ]
             },
             "input_schema": {
@@ -1081,7 +1089,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -1114,7 +1122,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false
@@ -1147,7 +1155,7 @@
                 "account": {
                   "type": "string",
                   "default": "",
-                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and selects the named account when it is not — together with any account whose name both starts and ends with it (\"A\" also selects \"ABA\"); the page's posture strip names such collisions. Exact-or-all arrives with tap#360."
                 }
               },
               "additionalProperties": false

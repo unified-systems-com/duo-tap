@@ -35,6 +35,7 @@ class DuoBypassCode(BaseModel):
     FIELD_CRUD_SCHEMA: ClassVar[dict[str, Any]] = {
         "bypass_code_id": {"type": "string", "minLength": 1},
         "created": {"type": ["string", "null"]},
+        "expires": {"type": ["boolean", "null"]},
         "expiration": {"type": ["string", "null"]},
         "reuse_count": {"type": ["integer", "null"]},
         "admin_email": {"type": "string"},
@@ -44,6 +45,7 @@ class DuoBypassCode(BaseModel):
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
     FIELD_VALIDATION_SCHEMA: ClassVar[dict[str, Any]] = {
         "bypass_code_id": {"validation": "jsonschema", "schema": {"type": "string", "minLength": 1}},
+        "expires": {"validation": "jsonschema", "schema": {"type": ["boolean", "null"]}},
         "reuse_count": {"validation": "jsonschema", "schema": {"type": ["integer", "null"]}},
         "admin_email": {"validation": "jsonschema", "schema": {"type": "string"}},
         "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
@@ -54,7 +56,10 @@ class DuoBypassCode(BaseModel):
     bypass_code_id = models.CharField(max_length=64, blank=True, default="", db_index=True)
     # When the code was issued.
     created = models.DateTimeField(null=True, blank=True)
-    # When the code expires.
+    # Whether the code expires: true when Duo reported an expiration (in `expiration`), false when Duo
+    # reported none — the code never expires — and null when not observed.
+    expires = models.BooleanField(null=True, blank=True, default=None)
+    # When the code expires, if it does (`expires` true).
     expiration = models.DateTimeField(null=True, blank=True)
     # Remaining uses as Duo reports it; Duo's semantics for 0/null (unlimited) are recorded as reported,
     # not reinterpreted.

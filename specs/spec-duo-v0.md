@@ -234,7 +234,7 @@ Bypass codes are the quiet MFA exemption: a user with `active` status and a stro
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_bypass_code.py` defines `DuoBypassCode(BaseModel)` with `ENTITY_TYPE = "duo__duo_bypass_code"`, `ENTITY_ICON = "duo-bypass-code"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `bypass_code_id`, `created`, `expiration`, `reuse_count`, `admin_email`, `tags`. `NATURAL_KEY = ('bypass_code_id',)` — Natural key: **`bypass_code_id`**. Observed-only; contained by its user. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_bypass_code.md`.
+`tap_plugin/duo/models/duo_bypass_code.py` defines `DuoBypassCode(BaseModel)` with `ENTITY_TYPE = "duo__duo_bypass_code"`, `ENTITY_ICON = "duo-bypass-code"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `bypass_code_id`, `created`, `expires`, `expiration`, `reuse_count`, `admin_email`, `tags`. `NATURAL_KEY = ('bypass_code_id',)` — Natural key: **`bypass_code_id`**. Observed-only; contained by its user. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_bypass_code.md`.
 
 #### Acceptance Criteria
 
@@ -442,6 +442,7 @@ The front of the account in one strip: five cards — MFA coverage, factor mix, 
 | req-duo-panel-posture-3 | Strength Split | Implemented | Phones split by Push capability; WebAuthn by security key versus platform. | `test_counts_for_one_account` |
 | req-duo-panel-posture-4 | Several Accounts | Implemented | With several accounts and no `?account=`, the strip links each. | `test_several_accounts_without_a_choice` |
 | req-duo-panel-posture-5 | Exact When Named | Implemented | With `?account=` set the strip reads exactly that account, and names any account the page's tables cannot separate from it (`A` beside `ABA`). | `test_named_account_is_exact_and_collision_is_reported` |
+| req-duo-panel-posture-6 | Expiry Three-State | Implemented | A bypass code counts as never expiring only when `expires` is false; a code whose expiry was not observed is counted separately. | `test_unobserved_expiry_is_not_never` |
 
 ---
 

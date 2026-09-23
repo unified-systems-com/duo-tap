@@ -190,7 +190,10 @@ def build_posture(envs: dict[str, dict[str, Any]], account: str) -> dict[str, An
     n_disabled = status.count("disabled")
     n_no_factor = sum(1 for v in enrolled if v is False)
     n_enrol_unobserved = sum(1 for v in enrolled if v is None)
-    n_never_expire = sum(1 for c in codes if _data(c).get("expiration") in (None, ""))
+    #: `expires` is the tri-state (false = Duo reported no expiration; null = not observed); a null
+    #: `expiration` alone cannot tell "never" from "not read".
+    n_never_expire = sum(1 for c in codes if _data(c).get("expires") is False)
+    n_expiry_unobserved = sum(1 for c in codes if _data(c).get("expires") is None)
     n_group_bypass = sum(1 for g in groups if _data(g).get("status") == "Bypass")
 
     caps = [_data(p).get("capabilities") for p in phones]
@@ -252,7 +255,14 @@ def build_posture(envs: dict[str, dict[str, Any]], account: str) -> dict[str, An
                     "Bypass codes",
                     len(codes),
                     _pos(len(codes), "bad"),
-                    note=f"{n_never_expire} never expire" if n_never_expire else "",
+                    note=", ".join(
+                        x
+                        for x in (
+                            f"{n_never_expire} never expire" if n_never_expire else "",
+                            f"{n_expiry_unobserved} expiry not observed" if n_expiry_unobserved else "",
+                        )
+                        if x
+                    ),
                     title="Outstanding bypass codes: MFA satisfied by a passcode, no authenticator needed.",
                 ),
                 Tile(

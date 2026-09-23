@@ -145,7 +145,12 @@ def seed_estate() -> Estate:
         e,
         "bob_code",
         "duo_bypass_code",
-        {"bypass_code_id": "DBBOB000000000000001", "reuse_count": 1, "admin_email": "helpdesk@example.com"},
+        {
+            "bypass_code_id": "DBBOB000000000000001",
+            "expires": False,
+            "reuse_count": 1,
+            "admin_email": "helpdesk@example.com",
+        },
     )
     _node(
         e,
