@@ -62,7 +62,6 @@ class DuoAccount(BaseModel):
         "helpdesk_bypass": {"type": "string", "enum": ["", "allow", "limit", "deny"]},
         "lockout_threshold": {"type": ["integer", "null"]},
         "inactive_user_expiration": {"type": ["integer", "null"]},
-        "configuration": {"type": "object"},
         "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
@@ -83,7 +82,6 @@ class DuoAccount(BaseModel):
         },
         "lockout_threshold": {"validation": "jsonschema", "schema": {"type": ["integer", "null"]}},
         "inactive_user_expiration": {"validation": "jsonschema", "schema": {"type": ["integer", "null"]}},
-        "configuration": {"validation": "jsonschema", "schema": {"type": "object"}},
         "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
     CREATE_REQUIRED: ClassVar[list[str]] = ["name"]
@@ -103,9 +101,6 @@ class DuoAccount(BaseModel):
     lockout_threshold = models.IntegerField(null=True, blank=True, default=None)
     # Days of inactivity after which Duo deletes a user, from the account settings.
     inactive_user_expiration = models.IntegerField(null=True, blank=True, default=None)
-    # The Admin API account-settings response (`GET /admin/v1/settings`) verbatim, for the settings not
-    # promoted to a field above.
-    configuration = models.JSONField(default=dict, blank=True)
     # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
     tags = models.JSONField(default=dict, blank=True)
 

@@ -22,6 +22,7 @@ No default dimension; the seeding bundle or collector stamps `dcom` per node.
 
 ## Boundaries
 
+- No free-form `configuration` field: the Admin API settings response has no reader here and can carry secret material or personal data, so only promoted columns are stored.
 - **Not the Duo Federal authorization itself.** That the service is FedRAMP-authorized is a fact about Duo the vendor; this node records only which edition the account runs.
 - **Not billing or telephony credit.** Operational, event-shaped, and not asked of the account graph.
 - **Not MSP subaccounts.** The Accounts API integration type can no longer be created (Admin API, 2026-06-11); parent/child accounts are left out until a real consumer has one.
@@ -57,5 +58,4 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `helpdesk_bypass` — Whether Help Desk administrators may generate bypass codes: `allow` (Duo's default), `limit`, or `deny`. From the account settings. Blank means not observed. A FedRAMP reviewer asks this before anything else about bypass.
 - `lockout_threshold` — Consecutive failed authentications before a user's status becomes `locked out`. Null means not observed.
 - `inactive_user_expiration` — Days of inactivity after which Duo deletes a user, from the account settings. Null means not observed; Duo reports null as well when the setting is off, so a collector must record which it saw.
-- `configuration` — The Admin API account-settings response (`GET /admin/v1/settings`) verbatim, for the settings not promoted to a field above. Empty means not observed.
 - `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
