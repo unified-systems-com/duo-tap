@@ -209,6 +209,32 @@ class TestPosture:
         for key, query in QUERIES.items():
             assert key == "accounts" or "[:" in query, key
 
+    def test_named_account_is_exact_and_collision_is_reported(self) -> None:
+        """req-duo-panel-posture-5: with accounts "A" and "ABA", ?account=A counts A alone and names
+        ABA as a collision the tables cannot separate; the page's search does include ABA (tap#360)."""
+        from tap_grid.services import WriteOperation, create_node, write_batch
+
+        ids = {}
+        for name, user in (("A", "DUA000000000000000001"), ("ABA", "DUABA0000000000000001")):
+            ids[name] = create_node("duo__duo_account", {"name": name}).entity_id
+            uid = create_node("duo__duo_user", {"user_id": user, "status": "bypass"}).entity_id
+            assert write_batch(
+                [
+                    WriteOperation(
+                        verb="create_edge",
+                        from_target=ids[name],
+                        to_target=uid,
+                        edge_type="HOLDS_ACCOUNT_OBJECT__duo",
+                        payload={},
+                    )
+                ]
+            ).success
+        ctx = build_posture(_fetch("A"), "A")
+        tiles = {(s.key, t.label): t for s in ctx["sections"] for t in s.tiles}
+        assert tiles[("coverage", "Users")].value == 1
+        assert ctx["ambiguous_with"] == ["ABA"]
+        assert len(_run("users not doing MFA", "A")["nodes"]) == 2  # the documented limit of the page searches
+
 
 def _panel_id(slug: str) -> str:
     """The panel's URL id: <slug>--<uuid> (tap_web.page.parse_panel_url_id)."""

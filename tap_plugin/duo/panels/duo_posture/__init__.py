@@ -38,25 +38,40 @@ T_PHONE = "duo__duo_phone"
 T_TOKEN = "duo__duo_hardware_token"
 T_ENDPOINT = "duo__duo_endpoint"
 
-#: The account predicate every read shares (see the page searches' input description): the
-#: empty string selects every account; a name selects that account.
-ACCT = "a.name STARTS_WITH $account AND a.name ENDS_WITH $account"
+#: The account predicate. The page's searches use the starts-with AND ends-with pair (every
+#: account when the input is empty; see the search input description and tap#360). The strip
+#: is Python, so it can do better: EXACT (`a.name = $account`) when an account is named, the
+#: pair (with an empty value, so every account) only when none is. A name that another account's
+#: name both starts and ends with is reported as ambiguous, because the page's tables cannot
+#: tell those accounts apart.
+ACCT_ALL = "a.name STARTS_WITH $account AND a.name ENDS_WITH $account"
+ACCT_EXACT = "a.name = $account"
 HOLDS = "(a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->"
 
-QUERIES: dict[str, str] = {
-    "accounts": "MATCH (a:duo__duo_account) RETURN a",
-    "held": f"MATCH {HOLDS}(o) WHERE {ACCT} RETURN o",
+_READS: dict[str, str] = {
+    "held": "MATCH {holds}(o) WHERE {acct} RETURN o",
     "user_webauthn": (
-        f"MATCH {HOLDS}(u:duo__duo_user)-[:ENROLLS_WEBAUTHN_CREDENTIAL__duo]->(w:duo__duo_webauthn_credential) "
-        f"WHERE {ACCT} RETURN u, w"
+        "MATCH {holds}(u:duo__duo_user)-[:ENROLLS_WEBAUTHN_CREDENTIAL__duo]->(w:duo__duo_webauthn_credential) "
+        "WHERE {acct} RETURN u, w"
     ),
     "admin_webauthn": (
-        f"MATCH {HOLDS}(ad:duo__duo_administrator)-[:ENROLLS_WEBAUTHN_CREDENTIAL__duo]->(w:duo__duo_webauthn_credential) "
-        f"WHERE {ACCT} RETURN ad, w"
+        "MATCH {holds}(ad:duo__duo_administrator)-[:ENROLLS_WEBAUTHN_CREDENTIAL__duo]->(w:duo__duo_webauthn_credential) "
+        "WHERE {acct} RETURN ad, w"
     ),
-    "codes": f"MATCH {HOLDS}(u:duo__duo_user)-[:HOLDS_BYPASS_CODE__duo]->(b:duo__duo_bypass_code) WHERE {ACCT} RETURN b",
-    "enforce": f"MATCH {HOLDS}(p:duo__duo_application)-[:ENFORCES_POLICY__duo]->(q:duo__duo_policy) WHERE {ACCT} RETURN p, q",
+    "codes": "MATCH {holds}(u:duo__duo_user)-[:HOLDS_BYPASS_CODE__duo]->(b:duo__duo_bypass_code) WHERE {acct} RETURN b",
+    "enforce": "MATCH {holds}(p:duo__duo_application)-[:ENFORCES_POLICY__duo]->(q:duo__duo_policy) WHERE {acct} RETURN p, q",
 }
+
+
+def queries(account: str) -> dict[str, str]:
+    """The strip's reads for `account` — exact when one is named, every account when not."""
+    acct = ACCT_EXACT if account else ACCT_ALL
+    out = {"accounts": "MATCH (a:duo__duo_account) RETURN a"}
+    out.update({key: q.format(holds=HOLDS, acct=acct) for key, q in _READS.items()})
+    return out
+
+
+QUERIES: dict[str, str] = queries("")
 
 #: Admin API grants that change Duo rather than read it.
 WRITE_GRANTS = frozenset(
@@ -106,7 +121,7 @@ def _fetch(account: str) -> dict[str, dict[str, Any]]:
     from tap_grid.gryphon.executor import execute_gryphon_raw
 
     envs: dict[str, dict[str, Any]] = {}
-    for key, query in QUERIES.items():
+    for key, query in queries(account).items():
         inputs = {} if key == "accounts" else {"account": account}
         envs[key] = execute_gryphon_raw(query, inputs, layer="full")
     return envs
@@ -130,6 +145,15 @@ def build_posture(envs: dict[str, dict[str, Any]], account: str) -> dict[str, An
     """Fold the reads into the strip's context. Pure over envelopes (the tests feed real ones)."""
     all_accounts = sorted(_of(envs["accounts"].get("nodes", []), T_ACCOUNT), key=lambda n: str(n.get("name") or ""))
     selected = [n for n in all_accounts if not account or (n.get("name") or "") == account]
+    #: Other accounts the page's tables would also match for this name (starts AND ends with it).
+    ambiguous_with = sorted(
+        str(n.get("name") or "")
+        for n in all_accounts
+        if account
+        and (n.get("name") or "") != account
+        and str(n.get("name") or "").startswith(account)
+        and str(n.get("name") or "").endswith(account)
+    )
     heads = [
         AccountHead(
             name=str(n.get("name") or ""),
@@ -360,6 +384,7 @@ def build_posture(envs: dict[str, dict[str, Any]], account: str) -> dict[str, An
         if len(all_accounts) > 1
         else [],
         "unknown_account": bool(account) and not selected,
+        "ambiguous_with": ambiguous_with,
         "sections": sections,
         "empty": not held,
     }
