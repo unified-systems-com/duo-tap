@@ -84,7 +84,7 @@ Everything Duo does happens inside an account — users are enrolled in one, app
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_account.py` defines `DuoAccount(BaseModel)` with `ENTITY_TYPE = "duo__duo_account"`, `ENTITY_ICON = "duo-account"`, default dimensions none (the account spans every surface; `dcom` is stamped per observation), and fields `name`, `api_hostname`, `edition`, `helpdesk_bypass`, `lockout_threshold`, `inactive_user_expiration`, `configuration`, `tags`. `NATURAL_KEY = ('name',)` — Natural key: **`name`**. A design-phase account has no observed identifier, so its name is the only fact it carries. `api_hostname` is the real stable identifier; the key moves to it when `req-duo-collector` makes it observable (spec: `req-duo-account`). Two accounts with the same name would collide today — acceptable while every account on a grid is a designed one. `CONTAINMENT_EDGES = ('HOLDS_ACCOUNT_OBJECT__duo',)`. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_account.md`.
+`tap_plugin/duo/models/duo_account.py` defines `DuoAccount(BaseModel)` with `ENTITY_TYPE = "duo__duo_account"`, `ENTITY_ICON = "duo-account"`, default dimensions none (the account spans every surface; `dcom` is stamped per observation), and fields `name`, `api_hostname`, `edition`, `helpdesk_bypass`, `lockout_threshold`, `inactive_user_expiration`, `tags`. It has no free-form `configuration` field: the Admin API settings response has no reader here and can carry secret material or personal data, so only promoted columns are stored (migration `0003_drop_unused_configuration` removed it). `NATURAL_KEY = ('name',)` — Natural key: **`name`**. A design-phase account has no observed identifier, so its name is the only fact it carries. `api_hostname` is the real stable identifier; the key moves to it when `req-duo-collector` makes it observable (spec: `req-duo-account`). Two accounts with the same name would collide today — acceptable while every account on a grid is a designed one. `CONTAINMENT_EDGES = ('HOLDS_ACCOUNT_OBJECT__duo',)`. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_account.md`.
 
 #### Acceptance Criteria
 
@@ -96,6 +96,7 @@ Everything Duo does happens inside an account — users are enrolled in one, app
 | req-duo-account-4 | Keyed On Its Own Fields | Implemented | `NATURAL_KEY = ('name',)`, every key a model field. | `test_every_key_is_a_field` |
 | req-duo-account-5 | Edition Is Closed | Implemented | `edition` accepts Duo's editions (`essentials`, `advantage`, `premier`, `federal_mfa`, `federal_access`, `other`) or blank, and refuses anything else. | `test_account_edition_is_closed` |
 | req-duo-account-6 | Contains Its Tree | Implemented | `delete_node(account, cascade="contained")` retires every object it holds through `HOLDS_ACCOUNT_OBJECT__duo` and, through each user and administrator, their WebAuthn credentials and bypass codes; another account's objects stay live. | `test_account_cascade_retires_its_tree` |
+| req-duo-account-7 | No Free-Form Record | Implemented | The account declares no `configuration` field, and a `create_node` write carrying it is refused. | `test_no_free_form_record`, `test_configuration_write_is_refused` |
 
 ---
 ### Duo User
