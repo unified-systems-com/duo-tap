@@ -1,0 +1,28 @@
+{
+  "slug": "ISSUES_SSO_ASSERTION__duo",
+  "name": "Issues SSO Assertion",
+  "description": "A Duo SSO application signs users into a service provider or relying party with a SAML assertion or OIDC token — for example Duo SSO as the identity provider an Okta org routes to. The target is deliberately open (omitted): the service provider belongs to another plugin, and no substrate owns a neutral service-provider type yet.",
+  "sources": [
+    "duo__duo_application"
+  ],
+  "default_dimensions": {
+    "duo.surface": "access"
+  },
+  "property_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "protocol"
+    ],
+    "properties": {
+      "protocol": {
+        "type": "string",
+        "enum": [
+          "saml",
+          "oidc"
+        ],
+        "description": "The federation protocol of the Duo SSO application (Duo's sso-generic is SAML, sso-oidc-generic is OIDC)."
+      }
+    }
+  }
+}

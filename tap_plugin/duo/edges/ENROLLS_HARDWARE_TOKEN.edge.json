@@ -1,0 +1,15 @@
+{
+  "slug": "ENROLLS_HARDWARE_TOKEN__duo",
+  "name": "Enrolls Hardware Token",
+  "description": "A Duo user or administrator is assigned an OTP hardware token.",
+  "sources": [
+    "duo__duo_user",
+    "duo__duo_administrator"
+  ],
+  "targets": [
+    "duo__duo_hardware_token"
+  ],
+  "default_dimensions": {
+    "duo.surface": "authenticators"
+  }
+}

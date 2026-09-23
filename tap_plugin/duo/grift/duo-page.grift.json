@@ -1,0 +1,1672 @@
+{
+  "metadata": {
+    "grift_version": "0"
+  },
+  "_reserved": {},
+  "batches": [
+    {
+      "batch_entity": {
+        "entity_id": "01a0cc71-e9cb-7519-9f63-7222430064a2",
+        "entity_type": "batch",
+        "name": "duo page v0.1.0",
+        "dimensions": {}
+      },
+      "batch_node": {
+        "source": "tap_plugin.duo.grift.duo_page",
+        "name": "duo page v0.1.0",
+        "description": "The /duo page (req-duo-page): one page, the account-map graph panel with its projection, elevation, layout (account-map.js) and seven scene searches; the posture strip (the plugin's own panel type, req-duo-panel-posture); seven standard tables, each over a search this bundle owns. Every search is scoped by the page's ?account= (the account's name; empty = every account). References no entity outside this file and no instance data: the page renders whatever Duo nodes the grid holds."
+      },
+      "nodes": [
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "entity_type": "page",
+            "name": "Duo",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Duo",
+            "slug": "/duo",
+            "nav_weight": 140,
+            "description": "The operator's front page for a Duo account in a FedRAMP 20x environment: the account map at the top, then the posture strip, the protected applications and the policy each enforces, the policies, the users not doing MFA, outstanding bypass codes, administrators and device health. ?account=<account name> selects an account; without it the page shows every account, which is the one account on a grid that holds one.",
+            "layout": {
+              "full_bleed": true,
+              "columns": {
+                "col-1": {
+                  "width": "1fr",
+                  "rows": {
+                    "row-1": {
+                      "panel-id": "map",
+                      "height": "60vh"
+                    },
+                    "row-2": {
+                      "panel-id": "posture",
+                      "height": "auto"
+                    },
+                    "row-3": {
+                      "panel-id": "applications",
+                      "height": "auto"
+                    },
+                    "row-4": {
+                      "panel-id": "assignments",
+                      "height": "auto"
+                    },
+                    "row-5": {
+                      "panel-id": "policies",
+                      "height": "auto"
+                    },
+                    "row-6": {
+                      "panel-id": "users",
+                      "height": "auto"
+                    },
+                    "row-7": {
+                      "panel-id": "bypass-codes",
+                      "height": "auto"
+                    },
+                    "row-8": {
+                      "panel-id": "admins",
+                      "height": "auto"
+                    },
+                    "row-9": {
+                      "panel-id": "endpoints",
+                      "height": "auto"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "entity_type": "panel",
+            "name": "Duo account map",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Duo account map",
+            "slug": "duo-account-map",
+            "description": "The account at the centre; its protected applications on the left with whatever sends users to them (an Okta org, a VPN) further out; the policies they enforce on the right; the groups they admit below; the enrolled-device types above, one tile per kind with its count. Lines are policy enforcement (application → policy) and group access (application → group); tenancy is the layout itself. An application with no line to a policy runs under the Global Policy.",
+            "view": "tap_viz/panels/graph_panel.html",
+            "editor_view": "",
+            "config": {
+              "height": "100%",
+              "hide_header": true
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f1f79ea1b0",
+            "entity_type": "panel",
+            "name": "Duo posture",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Duo posture",
+            "slug": "duo-posture",
+            "description": "The front of the account in one strip: MFA coverage (bypass, lockout, enrollment), the factor mix from phishable to phishing-resistant, access (applications, Admin API grants, new-user policy), administration, and device trust. Every count that rests on a field no collector has observed says so instead of reading as zero.",
+            "view": "duo/panels/duo_posture.html",
+            "editor_view": "",
+            "config": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f207d0d584",
+            "entity_type": "panel",
+            "name": "Protected applications",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Protected applications",
+            "slug": "duo-applications",
+            "description": "Every application in the account: what it is, who may use it, and — for an Admin API application — what it may do to Duo itself. The policy each enforces is the next table.",
+            "view": "tap_web/panels/table_panel.html",
+            "editor_view": "",
+            "config": {
+              "hide_header": false,
+              "height": 360,
+              "quick_filter": true,
+              "default_page_size": 200,
+              "columns": [
+                {
+                  "field": "data.name",
+                  "title": "Application",
+                  "headerSort": true,
+                  "header_tooltip": "The application's name in Duo.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "data.integration_type",
+                  "title": "Type",
+                  "headerSort": true,
+                  "header_tooltip": "Duo's integration type: okta (Duo as Okta's authenticator), sso-generic / sso-oidc-generic (Duo SSO), adminapi, authapi, websdk, rdp, unix, radius, ldapproxy, …",
+                  "width": 150
+                },
+                {
+                  "field": "data.user_access",
+                  "title": "User access",
+                  "headerSort": true,
+                  "header_tooltip": "ALL_USERS, NO_USERS, or PERMITTED_GROUPS (only the groups the application admits). A dash means not observed.",
+                  "width": 160,
+                  "formatter": "toneBadge",
+                  "formatter_params": {
+                    "tones": {
+                      "ALL_USERS": "warn",
+                      "PERMITTED_GROUPS": "good",
+                      "NO_USERS": "muted"
+                    }
+                  }
+                },
+                {
+                  "field": "data.adminapi_permissions",
+                  "title": "Admin API grants",
+                  "headerSort": true,
+                  "header_tooltip": "For an Admin API application: the permissions it holds on Duo. Write grants on resources, administrators, integrations or settings can change who has to do MFA.",
+                  "widthGrow": 2,
+                  "formatter": "json"
+                },
+                {
+                  "field": "data.self_service_allowed",
+                  "title": "Self-service",
+                  "headerSort": true,
+                  "header_tooltip": "Whether users may manage their own devices from this application. A dash means not observed.",
+                  "width": 110,
+                  "formatter": "tickCross"
+                },
+                {
+                  "field": "data.integration_key",
+                  "title": "Integration key",
+                  "headerSort": true,
+                  "header_tooltip": "Duo's DI… id. Blank until a collector observes it.",
+                  "width": 190
+                }
+              ]
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f336422edf",
+            "entity_type": "panel",
+            "name": "Policy by application",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Policy by application",
+            "slug": "duo-policy-assignments",
+            "description": "Which custom policy each application enforces, for everyone (app) or for certain groups (group policy, in stack order). An application missing here enforces nothing of its own: it runs under the Global Policy, shown in the policies table.",
+            "view": "tap_web/panels/table_panel.html",
+            "editor_view": "",
+            "config": {
+              "hide_header": false,
+              "height": 320,
+              "quick_filter": true,
+              "default_page_size": 200,
+              "columns": [
+                {
+                  "field": "application",
+                  "title": "Application",
+                  "headerSort": true,
+                  "header_tooltip": "The protected application.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "integration_type",
+                  "title": "Type",
+                  "headerSort": true,
+                  "header_tooltip": "Duo's integration type.",
+                  "width": 140
+                },
+                {
+                  "field": "policy",
+                  "title": "Policy",
+                  "headerSort": true,
+                  "header_tooltip": "The custom policy the application enforces.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "apply_type",
+                  "title": "Applies to",
+                  "headerSort": true,
+                  "header_tooltip": "app: every user of the application. group_app: only members of the listed groups — a group policy.",
+                  "width": 130,
+                  "formatter": "toneBadge",
+                  "formatter_params": {
+                    "labels": {
+                      "app": "all users",
+                      "group_app": "groups"
+                    },
+                    "tones": {
+                      "app": "good",
+                      "group_app": "muted"
+                    }
+                  }
+                },
+                {
+                  "field": "group_names",
+                  "title": "Groups",
+                  "headerSort": true,
+                  "header_tooltip": "For a group policy: the groups it targets in this application.",
+                  "widthGrow": 1,
+                  "formatter": "json"
+                },
+                {
+                  "field": "group_position",
+                  "title": "Stack",
+                  "headerSort": true,
+                  "header_tooltip": "For a group policy: its position in the application's group-policy stack; order decides which applies to a user in several groups.",
+                  "width": 80
+                },
+                {
+                  "field": "new_user_behavior",
+                  "title": "New users",
+                  "headerSort": true,
+                  "header_tooltip": "The policy's New User Policy: enroll, deny, or no-mfa (unenrolled users get in without MFA). A dash means the section is inherited or not observed.",
+                  "width": 120,
+                  "formatter": "toneBadge",
+                  "formatter_params": {
+                    "tones": {
+                      "no-mfa": "bad",
+                      "enroll": "warn",
+                      "deny": "good"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f40986f2f1",
+            "entity_type": "panel",
+            "name": "Policies",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Policies",
+            "slug": "duo-policies",
+            "description": "The Global Policy and every custom policy: what an unenrolled user may do and which authentication methods are allowed. A dash is a section the policy does not set (it inherits) or that no collector has observed — never a permissive default.",
+            "view": "tap_web/panels/table_panel.html",
+            "editor_view": "",
+            "config": {
+              "hide_header": false,
+              "height": 320,
+              "quick_filter": true,
+              "default_page_size": 200,
+              "columns": [
+                {
+                  "field": "data.name",
+                  "title": "Policy",
+                  "headerSort": true,
+                  "header_tooltip": "The policy's name.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "data.is_global",
+                  "title": "Global",
+                  "headerSort": true,
+                  "header_tooltip": "✓ for the Global Policy, which every application inherits section by section unless overridden.",
+                  "width": 90,
+                  "formatter": "tickDash"
+                },
+                {
+                  "field": "data.new_user_behavior",
+                  "title": "New users",
+                  "headerSort": true,
+                  "header_tooltip": "enroll, deny, or no-mfa. no-mfa lets an unenrolled user in without a second factor.",
+                  "width": 120,
+                  "formatter": "toneBadge",
+                  "formatter_params": {
+                    "tones": {
+                      "no-mfa": "bad",
+                      "enroll": "warn",
+                      "deny": "good"
+                    }
+                  }
+                },
+                {
+                  "field": "data.allowed_auth_methods",
+                  "title": "Allowed methods",
+                  "headerSort": true,
+                  "header_tooltip": "The Authentication Methods allowed list. sms and phonecall are phishable; webauthn-roaming / webauthn-platform are phishing-resistant; smart-card exists only on Duo Federal.",
+                  "widthGrow": 3,
+                  "formatter": "json"
+                },
+                {
+                  "field": "data.policy_key",
+                  "title": "Policy key",
+                  "headerSort": true,
+                  "header_tooltip": "Duo's PO… id. Blank until observed.",
+                  "width": 190
+                }
+              ]
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f50afa7104",
+            "entity_type": "panel",
+            "name": "Users not doing MFA — or not known to",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Users not doing MFA — or not known to",
+            "slug": "duo-users-attention",
+            "description": "Users in bypass (MFA skipped), locked out, or disabled; users with no enrolled authenticator; and users whose enrollment no collector has observed — the third state, listed rather than assumed enrolled.",
+            "view": "tap_web/panels/table_panel.html",
+            "editor_view": "",
+            "config": {
+              "hide_header": false,
+              "height": 360,
+              "quick_filter": true,
+              "default_page_size": 200,
+              "columns": [
+                {
+                  "field": "data.username",
+                  "title": "User",
+                  "headerSort": true,
+                  "header_tooltip": "The Duo username.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "data.realname",
+                  "title": "Name",
+                  "headerSort": true,
+                  "header_tooltip": "Full name as Duo holds it.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "data.status",
+                  "title": "Status",
+                  "headerSort": true,
+                  "header_tooltip": "active, bypass (skips MFA), locked out, disabled, pending deletion.",
+                  "width": 130,
+                  "formatter": "toneBadge",
+                  "formatter_params": {
+                    "tones": {
+                      "active": "good",
+                      "bypass": "bad",
+                      "locked out": "warn",
+                      "disabled": "muted",
+                      "pending deletion": "muted"
+                    }
+                  }
+                },
+                {
+                  "field": "data.is_enrolled",
+                  "title": "Enrolled",
+                  "headerSort": true,
+                  "header_tooltip": "✓ has at least one authenticator; ✕ has none; – not observed.",
+                  "width": 100,
+                  "formatter": "tickCross"
+                },
+                {
+                  "field": "data.last_login",
+                  "title": "Last login",
+                  "headerSort": true,
+                  "header_tooltip": "Duo's last successful login.",
+                  "width": 170,
+                  "formatter": "datetime"
+                },
+                {
+                  "field": "data.user_id",
+                  "title": "User id",
+                  "headerSort": true,
+                  "header_tooltip": "Duo's DU… id.",
+                  "width": 190
+                }
+              ]
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f62d566aeb",
+            "entity_type": "panel",
+            "name": "Outstanding bypass codes",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Outstanding bypass codes",
+            "slug": "duo-bypass-codes",
+            "description": "Every bypass code a user holds right now: a passcode that satisfies MFA with no authenticator. Expiration blank on an observed code means it never expires.",
+            "view": "tap_web/panels/table_panel.html",
+            "editor_view": "",
+            "config": {
+              "hide_header": false,
+              "height": 260,
+              "quick_filter": true,
+              "default_page_size": 200,
+              "columns": [
+                {
+                  "field": "username",
+                  "title": "User",
+                  "headerSort": true,
+                  "header_tooltip": "Who holds the code.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "user_status",
+                  "title": "User status",
+                  "headerSort": true,
+                  "header_tooltip": "The holder's status.",
+                  "width": 130,
+                  "formatter": "toneBadge",
+                  "formatter_params": {
+                    "tones": {
+                      "active": "good",
+                      "bypass": "bad",
+                      "locked out": "warn",
+                      "disabled": "muted",
+                      "pending deletion": "muted"
+                    }
+                  }
+                },
+                {
+                  "field": "expiration",
+                  "title": "Expires",
+                  "headerSort": true,
+                  "header_tooltip": "When the code expires; blank means it does not.",
+                  "width": 170,
+                  "formatter": "datetime"
+                },
+                {
+                  "field": "reuse_count",
+                  "title": "Uses left",
+                  "headerSort": true,
+                  "header_tooltip": "Remaining uses as Duo reports it.",
+                  "width": 100
+                },
+                {
+                  "field": "issued_by",
+                  "title": "Issued by",
+                  "headerSort": true,
+                  "header_tooltip": "The administrator who created it, as Duo reports (email; not an identity link).",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "created",
+                  "title": "Issued",
+                  "headerSort": true,
+                  "header_tooltip": "When the code was created.",
+                  "width": 170,
+                  "formatter": "datetime"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f74dde24ce",
+            "entity_type": "panel",
+            "name": "Administrators",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Administrators",
+            "slug": "duo-administrators",
+            "description": "Everyone who can change Duo, with their role and status. Whether each uses a phishing-resistant factor is counted in the posture strip.",
+            "view": "tap_web/panels/table_panel.html",
+            "editor_view": "",
+            "config": {
+              "hide_header": false,
+              "height": 300,
+              "quick_filter": true,
+              "default_page_size": 200,
+              "columns": [
+                {
+                  "field": "data.name",
+                  "title": "Administrator",
+                  "headerSort": true,
+                  "header_tooltip": "The administrator's name.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "data.email",
+                  "title": "Email",
+                  "headerSort": true,
+                  "header_tooltip": "Their Admin Panel login.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "data.role",
+                  "title": "Role",
+                  "headerSort": true,
+                  "header_tooltip": "Owner, Administrator, Application Manager, User Manager, Security Analyst, Help Desk, Billing, Read-only, or a custom role.",
+                  "width": 170,
+                  "formatter": "toneBadge",
+                  "formatter_params": {
+                    "tones": {
+                      "Owner": "bad",
+                      "Administrator": "warn",
+                      "Help Desk": "warn"
+                    }
+                  }
+                },
+                {
+                  "field": "data.status",
+                  "title": "Status",
+                  "headerSort": true,
+                  "header_tooltip": "Active, Disabled, Expired (blocked for inactivity), Pending Activation.",
+                  "width": 150,
+                  "formatter": "toneBadge",
+                  "formatter_params": {
+                    "tones": {
+                      "Active": "good",
+                      "Disabled": "muted",
+                      "Expired": "muted",
+                      "Pending Activation": "warn"
+                    }
+                  }
+                },
+                {
+                  "field": "data.restricted_by_admin_units",
+                  "title": "Admin units",
+                  "headerSort": true,
+                  "header_tooltip": "✓ reach limited to administrative units; ✕ account-wide; – not observed.",
+                  "width": 110,
+                  "formatter": "tickCross"
+                },
+                {
+                  "field": "data.last_login",
+                  "title": "Last login",
+                  "headerSort": true,
+                  "header_tooltip": "Last Admin Panel login.",
+                  "width": 170,
+                  "formatter": "datetime"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f8c69fc131",
+            "entity_type": "panel",
+            "name": "Device health",
+            "dimensions": {
+              "tap.graph": "web"
+            }
+          },
+          "node": {
+            "name": "Device health",
+            "slug": "duo-endpoints",
+            "description": "The devices authentications come from and the posture Duo Desktop reports. A blank Duo Desktop version means the device is not reporting: its posture is unknown, not healthy.",
+            "view": "tap_web/panels/table_panel.html",
+            "editor_view": "",
+            "config": {
+              "hide_header": false,
+              "height": 320,
+              "quick_filter": true,
+              "default_page_size": 200,
+              "columns": [
+                {
+                  "field": "data.device_name",
+                  "title": "Device",
+                  "headerSort": true,
+                  "header_tooltip": "Device name when Duo Desktop reports one.",
+                  "widthGrow": 2
+                },
+                {
+                  "field": "data.os_family",
+                  "title": "OS",
+                  "headerSort": true,
+                  "header_tooltip": "Operating-system family.",
+                  "width": 110
+                },
+                {
+                  "field": "data.os_version",
+                  "title": "Version",
+                  "headerSort": true,
+                  "header_tooltip": "Operating-system version.",
+                  "width": 110
+                },
+                {
+                  "field": "data.trusted_endpoint",
+                  "title": "Trusted",
+                  "headerSort": true,
+                  "header_tooltip": "✓ a Trusted Endpoint (registered through a management integration); ✕ unmanaged; – not observed.",
+                  "width": 90,
+                  "formatter": "tickCross"
+                },
+                {
+                  "field": "data.disk_encryption_status",
+                  "title": "Disk encryption",
+                  "headerSort": true,
+                  "header_tooltip": "As Duo Desktop reports it.",
+                  "width": 140
+                },
+                {
+                  "field": "data.firewall_status",
+                  "title": "Firewall",
+                  "headerSort": true,
+                  "header_tooltip": "As Duo Desktop reports it.",
+                  "width": 120
+                },
+                {
+                  "field": "data.password_status",
+                  "title": "Password",
+                  "headerSort": true,
+                  "header_tooltip": "As Duo Desktop reports it.",
+                  "width": 120
+                },
+                {
+                  "field": "data.health_app_client_version",
+                  "title": "Duo Desktop",
+                  "headerSort": true,
+                  "header_tooltip": "The reporting Duo Desktop version; blank means no posture is reported.",
+                  "width": 120
+                },
+                {
+                  "field": "data.last_updated",
+                  "title": "Last seen",
+                  "headerSort": true,
+                  "header_tooltip": "When Duo last updated the record.",
+                  "width": 170,
+                  "formatter": "datetime"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f9ad85e762",
+            "entity_type": "search",
+            "name": "duo — account map: account, applications, policies, groups",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — account map: account, applications, policies, groups",
+            "description": "Scene search for the /duo account map: the selected account and the applications, policies and groups it holds (HOLDS_ACCOUNT_OBJECT__duo). The tenancy edges come with them and are hidden by the layout.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(o)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account AND o.entity_type IN [\"duo__duo_application\", \"duo__duo_policy\", \"duo__duo_group\"]",
+                "RETURN a, o"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8fa82bee299",
+            "entity_type": "search",
+            "name": "duo — account map: applications' policies",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — account map: applications' policies",
+            "description": "Scene search: each application of the selected account and the custom policies it enforces, with the ENFORCES_POLICY__duo edges (app-level and group policies). An application with no edge runs under the Global Policy.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(p:duo__duo_application)-[:ENFORCES_POLICY__duo]->(q:duo__duo_policy)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN p, q"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8fb2d208275",
+            "entity_type": "search",
+            "name": "duo — account map: applications' permitted groups",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — account map: applications' permitted groups",
+            "description": "Scene search: each PERMITTED_GROUPS application of the selected account and the groups it admits (PERMITS_GROUP__duo).",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(p:duo__duo_application)-[:PERMITS_GROUP__duo]->(g:duo__duo_group)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN p, g"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8fc01bc81db",
+            "entity_type": "search",
+            "name": "duo — account map: phones and hardware tokens",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — account map: phones and hardware tokens",
+            "description": "Scene search: the phones and hardware tokens the selected account holds. The layout folds them into one tile per enrolled-device type (Duo Push phones, SMS/voice-only phones, hardware tokens) and removes the individual nodes, so their count is what the map shows.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(d)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account AND d.entity_type IN [\"duo__duo_phone\", \"duo__duo_hardware_token\"]",
+                "RETURN a, d"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8fd62e035d2",
+            "entity_type": "search",
+            "name": "duo — account map: WebAuthn credentials",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — account map: WebAuthn credentials",
+            "description": "Scene search: the WebAuthn credentials enrolled by the selected account's users. Folded by the layout into security-key and platform-authenticator tiles.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(u:duo__duo_user)-[:ENROLLS_WEBAUTHN_CREDENTIAL__duo]->(w:duo__duo_webauthn_credential)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN w"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8feb91de69d",
+            "entity_type": "search",
+            "name": "duo — account map: systems that request a second factor",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — account map: systems that request a second factor",
+            "description": "Scene search: whatever sends its users to the selected account's applications for a second factor (REQUESTS_SECOND_FACTOR__duo, source open — an Okta org, a VPN, SSH hosts), with the edge.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(p:duo__duo_application)<-[:REQUESTS_SECOND_FACTOR__duo]-(x)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN x, p"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ff2580044a",
+            "entity_type": "search",
+            "name": "duo — account map: services Duo SSO signs into",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — account map: services Duo SSO signs into",
+            "description": "Scene search: the service providers the selected account's Duo SSO applications issue assertions to (ISSUES_SSO_ASSERTION__duo, target open).",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(p:duo__duo_application)-[:ISSUES_SSO_ASSERTION__duo]->(y)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN p, y"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d900f016acfd",
+            "entity_type": "search",
+            "name": "duo — protected applications of an account",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — protected applications of an account",
+            "description": "Envelope mode (RETURN p) so the table receives typed nodes: every application the selected account holds.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(p:duo__duo_application)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN p"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9015d3ff9e4",
+            "entity_type": "search",
+            "name": "duo — policy assignments of an account",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — policy assignments of an account",
+            "description": "Projection mode (rows): one row per ENFORCES_POLICY__duo edge from the selected account's applications — application, policy, how it applies (app or group policy), the targeted groups and the group-policy stack position. An application absent from these rows enforces no custom policy and runs under the Global Policy (OPTIONAL MATCH cannot express the left join over a traversal yet, so the inheritance is stated here rather than drawn as a row).",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(p:duo__duo_application)-[e:ENFORCES_POLICY__duo]->(q:duo__duo_policy)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN p.name AS application, p.data.integration_type AS integration_type, q.name AS policy, q.data.new_user_behavior AS new_user_behavior, e.data.properties.apply_type AS apply_type, e.data.properties.group_names AS group_names, e.data.properties.group_position AS group_position"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d902c7259eb6",
+            "entity_type": "search",
+            "name": "duo — policies of an account",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — policies of an account",
+            "description": "Envelope mode: every policy the selected account defines, the Global Policy included.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(q:duo__duo_policy)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN q"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d903340294e4",
+            "entity_type": "search",
+            "name": "duo — users not doing MFA, or not known to",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — users not doing MFA, or not known to",
+            "description": "Envelope mode: the selected account's users whose status is bypass, locked out or disabled, or who have no enrolled authenticator (is_enrolled false), or whose enrollment was not observed (is_enrolled null — never read as enrolled).",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(u:duo__duo_user)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account AND (u.data.status IN [\"bypass\", \"locked out\", \"disabled\"] OR u.data.is_enrolled = false OR u.data.is_enrolled IS NULL)",
+                "RETURN u"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90469ec22d0",
+            "entity_type": "search",
+            "name": "duo — outstanding bypass codes of an account",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — outstanding bypass codes of an account",
+            "description": "Projection mode: one row per bypass code held by a user of the selected account — who holds it, when it expires (null on an observed code means it does not expire), remaining uses, and who issued it.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(u:duo__duo_user)-[:HOLDS_BYPASS_CODE__duo]->(b:duo__duo_bypass_code)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN u.data.username AS username, u.data.status AS user_status, b.data.created AS created, b.data.expiration AS expiration, b.data.reuse_count AS reuse_count, b.data.admin_email AS issued_by"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9057b9b6f52",
+            "entity_type": "search",
+            "name": "duo — administrators of an account",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — administrators of an account",
+            "description": "Envelope mode: every administrator of the selected account.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(ad:duo__duo_administrator)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN ad"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90680d3b4c0",
+            "entity_type": "search",
+            "name": "duo — endpoints of an account",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo — endpoints of an account",
+            "description": "Envelope mode: every endpoint the selected account has recorded, with its device-health posture.",
+            "search_type": "gryphon",
+            "root": "node",
+            "definition": {
+              "query": [
+                "MATCH (a:duo__duo_account)-[:HOLDS_ACCOUNT_OBJECT__duo]->(ep:duo__duo_endpoint)",
+                "WHERE a.name STARTS_WITH $account AND a.name ENDS_WITH $account",
+                "RETURN ep"
+              ]
+            },
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "account": {
+                  "type": "string",
+                  "default": "",
+                  "description": "The Duo account's name (duo__duo_account's natural key), from the page's ?account=. Empty — the default — selects every account, which is the single account on a grid that holds one. Matched as starts-with AND ends-with the value: Gryphon has no param-absent predicate (tap#360) and entity_id admits no string match, so this pair is the one predicate that is true of every account when the input is empty and exact (up to a name that both starts and ends with another account's whole name) when it is not."
+                }
+              },
+              "additionalProperties": false
+            },
+            "max_limit": 5000
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90781b83e08",
+            "entity_type": "projection",
+            "name": "duo account map projection",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo account map projection",
+            "description": "The Duo account map: one elevation, one layout module (account-map.js). Standard icon-badge chrome; the placement is fixed (lock_nodes) and the view opens fitted.",
+            "definition": {
+              "node_style": {
+                "mode": "icon-badge"
+              },
+              "elevations": [
+                "01a0cc71-e9cc-70b9-b2a2-d9087ba294fa"
+              ],
+              "default_elevation_id": "01a0cc71-e9cc-70b9-b2a2-d9087ba294fa",
+              "min_zoom": "fit",
+              "lock_nodes": true
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9087ba294fa",
+            "entity_type": "elevation",
+            "name": "duo account map elevation",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo account map elevation",
+            "description": "The Duo account map at one elevation.",
+            "definition": {
+              "zoom": 1.0,
+              "description": "The Duo account map at one elevation.",
+              "layouts": [
+                "01a0cc71-e9cc-70b9-b2a2-d909e5232bd5"
+              ],
+              "double_tap_targets": []
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d909e5232bd5",
+            "entity_type": "layout",
+            "name": "duo account map layout",
+            "dimensions": {}
+          },
+          "node": {
+            "name": "duo account map layout",
+            "description": "Hub layout (account-map.js, reusable by any page that mounts a Duo account scene): every account in the scene is a hub; its applications form a column on its left with the systems that request a second factor from them (and the services Duo SSO signs into) further out; the policies they enforce a column on its right; groups a row beneath; phones, hardware tokens and WebAuthn credentials folded into one tile per enrolled-device type above, each with its count. Tenancy edges are hidden (the hub is the tenancy); enforcement and group-access edges are drawn. Placement reads only entity types and edges, never ids, so it works for any account.",
+            "definition": {
+              "js_file": "tap_plugin/duo/static/duo/js/projections/account-map.js",
+              "arrangements": []
+            }
+          }
+        }
+      ],
+      "edges": [
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90a77b11194",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL map",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "map"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90b075648d2",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL posture",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f1f79ea1b0",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "posture"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90cc045a04b",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL applications",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f207d0d584",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "applications"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90d8921c2a4",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL assignments",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f336422edf",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "assignments"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90e5494f2bd",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL policies",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f40986f2f1",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "policies"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d90f771caa60",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL users",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f50afa7104",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "users"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9106812a351",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL bypass-codes",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f62d566aeb",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "bypass-codes"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d91109ccf72b",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL admins",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f74dde24ce",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "admins"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d912b93b93e4",
+            "entity_type": "edge",
+            "name": "duo page USES_PANEL endpoints",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ef6bf4fcfb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f8c69fc131",
+            "edge_type": "USES_PANEL",
+            "properties": {
+              "hotlink": {
+                "model": "page",
+                "spec": "page-panels",
+                "value": "endpoints"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d913954030d5",
+            "entity_type": "edge",
+            "name": "account map panel USES_PROJECTION account map projection",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d90781b83e08",
+            "edge_type": "USES_PROJECTION",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d914df8d2098",
+            "entity_type": "edge",
+            "name": "account map projection USES_ELEVATION elevation",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d90781b83e08",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d9087ba294fa",
+            "edge_type": "USES_ELEVATION",
+            "properties": {
+              "hotlink": {
+                "model": "projection",
+                "spec": "projection-elevations",
+                "value": "01a0cc71-e9cc-70b9-b2a2-d9087ba294fa"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9152ab233be",
+            "entity_type": "edge",
+            "name": "account map projection USES_DEFAULT_ELEVATION elevation",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d90781b83e08",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d9087ba294fa",
+            "edge_type": "USES_DEFAULT_ELEVATION",
+            "properties": {
+              "hotlink": {
+                "model": "projection",
+                "spec": "projection-default-elevation",
+                "value": "01a0cc71-e9cc-70b9-b2a2-d9087ba294fa"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9167b8b9153",
+            "entity_type": "edge",
+            "name": "account map elevation USES_LAYOUT layout",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d9087ba294fa",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d909e5232bd5",
+            "edge_type": "USES_LAYOUT",
+            "properties": {
+              "hotlink": {
+                "model": "elevation",
+                "spec": "elevation-layouts",
+                "value": "01a0cc71-e9cc-70b9-b2a2-d909e5232bd5"
+              }
+            }
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9178a2219fb",
+            "entity_type": "edge",
+            "name": "account map panel USES_SEARCH g_core",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f9ad85e762",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9180c42568c",
+            "entity_type": "edge",
+            "name": "account map panel USES_SEARCH g_enforce",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8fa82bee299",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d91917f59be0",
+            "entity_type": "edge",
+            "name": "account map panel USES_SEARCH g_permit",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8fb2d208275",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d91a46a80f29",
+            "entity_type": "edge",
+            "name": "account map panel USES_SEARCH g_devices",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8fc01bc81db",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d91ba1a9848a",
+            "entity_type": "edge",
+            "name": "account map panel USES_SEARCH g_webauthn",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8fd62e035d2",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d91c95f0ecab",
+            "entity_type": "edge",
+            "name": "account map panel USES_SEARCH g_protected",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8feb91de69d",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d91dfc79e8e5",
+            "entity_type": "edge",
+            "name": "account map panel USES_SEARCH g_sso",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f07935dd6e",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8ff2580044a",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d91e674ae202",
+            "entity_type": "edge",
+            "name": "p_apps USES_SEARCH t_apps",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f207d0d584",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d900f016acfd",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d91f7b1d560c",
+            "entity_type": "edge",
+            "name": "p_assign USES_SEARCH t_assign",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f336422edf",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d9015d3ff9e4",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d92078650c2a",
+            "entity_type": "edge",
+            "name": "p_policies USES_SEARCH t_policies",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f40986f2f1",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d902c7259eb6",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d921f1af1f38",
+            "entity_type": "edge",
+            "name": "p_users USES_SEARCH t_users",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f50afa7104",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d903340294e4",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d9227d73fe85",
+            "entity_type": "edge",
+            "name": "p_codes USES_SEARCH t_codes",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f62d566aeb",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d90469ec22d0",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d92386aa33ad",
+            "entity_type": "edge",
+            "name": "p_admins USES_SEARCH t_admins",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f74dde24ce",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d9057b9b6f52",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        },
+        {
+          "entity": {
+            "entity_id": "01a0cc71-e9cc-70b9-b2a2-d924ad057121",
+            "entity_type": "edge",
+            "name": "p_endpoints USES_SEARCH t_endpoints",
+            "dimensions": {}
+          },
+          "edge": {
+            "from_entity_id": "01a0cc71-e9cc-70b9-b2a2-d8f8c69fc131",
+            "to_entity_id": "01a0cc71-e9cc-70b9-b2a2-d90680d3b4c0",
+            "edge_type": "USES_SEARCH",
+            "properties": {}
+          }
+        }
+      ]
+    }
+  ]
+}

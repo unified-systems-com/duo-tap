@@ -3,7 +3,7 @@
 #   entry-point key = "duo"
 [project]
 name = "duo-tap"
-description = "Duo multi-factor authentication as grid vocabulary: v0 carries one outer node, the Duo account, so a design can place it before anything is collected."
+description = "Duo multi-factor authentication as grid vocabulary: the account, its users and groups, their authenticators (phones, hardware tokens, WebAuthn credentials, bypass codes), the protected applications and the policies they enforce, administrators and endpoints — and the /duo operator page over them."
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.14"

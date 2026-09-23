@@ -1,0 +1,19 @@
+{
+  "slug": "HOLDS_ACCOUNT_OBJECT__duo",
+  "name": "Holds Account Object",
+  "description": "A Duo account holds one of its objects: a user, group, application, policy, administrator, phone, hardware token or endpoint. One relationship — tenancy — over every object type Duo keeps per account; the account is the containment root and its objects retire with it. WebAuthn credentials and bypass codes are held by their user (or administrator) instead.",
+  "sources": [
+    "duo__duo_account"
+  ],
+  "targets": [
+    "duo__duo_user",
+    "duo__duo_group",
+    "duo__duo_application",
+    "duo__duo_policy",
+    "duo__duo_administrator",
+    "duo__duo_phone",
+    "duo__duo_hardware_token",
+    "duo__duo_endpoint"
+  ],
+  "default_dimensions": {}
+}

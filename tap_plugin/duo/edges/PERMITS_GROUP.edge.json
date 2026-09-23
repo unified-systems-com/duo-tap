@@ -1,0 +1,14 @@
+{
+  "slug": "PERMITS_GROUP__duo",
+  "name": "Permits Group",
+  "description": "A Duo application with PERMITTED_GROUPS user access admits members of this group (Duo's groups_allowed). With ALL_USERS or NO_USERS access no edge exists: the application's user_access field says who may authenticate.",
+  "sources": [
+    "duo__duo_application"
+  ],
+  "targets": [
+    "duo__duo_group"
+  ],
+  "default_dimensions": {
+    "duo.surface": "access"
+  }
+}

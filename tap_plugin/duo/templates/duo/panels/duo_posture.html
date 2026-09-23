@@ -1,0 +1,56 @@
+{% comment %}
+duo-posture — req-duo-panel-posture. The front of a Duo account in one strip: five cards (MFA
+coverage, factor mix, access, administration, device trust), each a set of counted tiles. Tone is a
+second channel only: every tile carries its label and number, and a hover names what it counts.
+A tile in the look tone is a count of things NOT OBSERVED — unknown, never zero.
+{% endcomment %}
+<section class="duo-posture" aria-label="Duo posture">
+  <header class="duo-posture__head">
+    {% if heads|length == 1 %}
+      {% with h=heads.0 %}
+      <h2 class="duo-posture__title">{{ h.name }}</h2>
+      <p class="duo-posture__facts">
+        <span title="Duo edition; Duo Federal (federal_mfa, federal_access) is the FedRAMP-authorized service.">Edition <b>{{ h.edition|default:"not observed" }}</b></span>
+        <span title="The account's API hostname; blank until a collector observes it.">API host <b>{{ h.api_hostname|default:"not observed" }}</b></span>
+        <span title="Whether Help Desk administrators may issue bypass codes (allow, limit, deny).">Help-desk bypass <b class="duo-posture__hb duo-posture__hb--{{ h.helpdesk_bypass|default:'unknown' }}">{{ h.helpdesk_bypass|default:"not observed" }}</b></span>
+        <span title="Failed attempts before lockout.">Lockout after <b>{% if h.lockout_threshold is not None %}{{ h.lockout_threshold }}{% else %}not observed{% endif %}</b></span>
+      </p>
+      {% endwith %}
+    {% elif choose %}
+      <h2 class="duo-posture__title">{% if account_param %}{{ account_param }}{% else %}All {{ choose|length }} Duo accounts{% endif %}</h2>
+      <p class="duo-posture__facts">
+        {% if unknown_account %}<span class="duo-posture__warn">No Duo account is named “{{ account_param }}”.</span>{% endif %}
+        <span>{% if account_param %}Other accounts:{% else %}Counted together — choose one:{% endif %}</span>
+        {% for c in choose %}<a href="{{ c.href }}">{{ c.name }}</a>{% endfor %}
+      </p>
+    {% else %}
+      <h2 class="duo-posture__title">Duo</h2>
+      {% if unknown_account %}<p class="duo-posture__facts"><span class="duo-posture__warn">No Duo account is named “{{ account_param }}”.</span></p>{% endif %}
+    {% endif %}
+  </header>
+
+  {% if posture_error %}
+    <p class="duo-posture__error">{{ posture_error }}</p>
+  {% elif not heads %}
+    <p class="duo-posture__empty">No Duo account on the grid{% if account_param %} by that name{% endif %}. A design places one with a <code>duo__duo_account</code> node; a collector (Backlog) observes one.</p>
+  {% else %}
+    {% if empty %}
+      <p class="duo-posture__empty">The account holds nothing on the grid yet — a designed account before any collector has run. Every count below is of what the grid holds, so zero here means nothing observed, not nothing there.</p>
+    {% endif %}
+    <div class="duo-posture__cards" role="list">
+      {% for section in sections %}
+        <article class="duo-posture__card duo-posture__card--{{ section.key }}" role="listitem">
+          <h3 class="duo-posture__card-title">{{ section.title }}</h3>
+          <dl class="duo-posture__tiles">
+            {% for t in section.tiles %}
+              <div class="duo-posture__tile duo-posture__tile--{{ t.tone }}" title="{{ t.title }}">
+                <dt>{{ t.label }}</dt>
+                <dd><span class="duo-posture__value">{{ t.value }}</span>{% if t.note %}<span class="duo-posture__note">{{ t.note }}</span>{% endif %}</dd>
+              </div>
+            {% endfor %}
+          </dl>
+        </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>

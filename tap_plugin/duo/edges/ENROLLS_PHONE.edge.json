@@ -1,0 +1,15 @@
+{
+  "slug": "ENROLLS_PHONE__duo",
+  "name": "Enrolls Phone",
+  "description": "A Duo user or administrator has a phone enrolled as an authenticator. A phone may be enrolled by more than one user, which is why the phone is held by the account and linked here rather than contained.",
+  "sources": [
+    "duo__duo_user",
+    "duo__duo_administrator"
+  ],
+  "targets": [
+    "duo__duo_phone"
+  ],
+  "default_dimensions": {
+    "duo.surface": "authenticators"
+  }
+}
