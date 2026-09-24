@@ -247,7 +247,7 @@ class TestPosture:
     def test_several_accounts_without_a_choice(self) -> None:
         """req-duo-panel-posture-4: with several accounts and no ?account=, the strip offers each."""
         seed_estate()
-        ctx = build_posture(_fetch(""), "")
+        ctx = build_posture(_fetch(None), None)
         assert [c.name for c in ctx["choose"]] == ["Duo Federal", "Other"]
         assert ctx["choose"][0].href == "?account=Duo+Federal"
 
@@ -281,6 +281,15 @@ class TestPosture:
         assert "ambiguous_with" not in ctx
         assert len(_run("users not doing MFA", "A")["nodes"]) == 1
         assert len(_run("users not doing MFA", None)["nodes"]) == 2
+
+    def test_blank_account_is_a_value_on_the_strip_and_the_tables(self) -> None:
+        """req-duo-page-4: a blank ?account= names no account, for the strip and the page's searches alike,
+        so the strip never counts every account above tables that show none. Absent is every account."""
+        seed_estate()
+        ctx = build_posture(_fetch(""), "")
+        assert ctx["heads"] == [] and ctx["unknown_account"] is True
+        assert _run("users not doing MFA", "")["nodes"] == []
+        assert build_posture(_fetch(None), None)["unknown_account"] is False
 
 
 def _panel_id(slug: str) -> str:

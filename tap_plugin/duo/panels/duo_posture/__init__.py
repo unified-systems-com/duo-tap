@@ -6,7 +6,8 @@ Spec: specs/spec-duo-v0.md (req-duo-panel-posture).
 Reads go through Gryphon (``execute_gryphon_raw``, gated on ``grid.read``). The page's
 ``?account=`` names the account (its natural key, ``name``); absent, every account in the grid is
 counted together, which is the one account when the grid holds one — and when it holds several
-the strip says so and links each.
+the strip says so and links each. A blank ``?account=`` is a value, as it is for the page's searches:
+it names no account, so the strip and the tables below it agree on what is selected.
 
 Three states, never two. A count over a field no collector has observed is not a zero: users
 whose ``is_enrolled`` is null, phones whose ``capabilities`` are null and endpoints with no
@@ -107,12 +108,12 @@ def _data(element: dict[str, Any]) -> dict[str, Any]:
     return dict(element.get("data") or {})
 
 
-def _fetch(account: str) -> dict[str, dict[str, Any]]:
+def _fetch(account: str | None) -> dict[str, dict[str, Any]]:
     from tap_grid.gryphon.executor import execute_gryphon_raw
 
     envs: dict[str, dict[str, Any]] = {}
     for key, query in QUERIES.items():
-        inputs = {} if key == "accounts" else {"account": account or None}
+        inputs = {} if key == "accounts" else {"account": account}
         envs[key] = execute_gryphon_raw(query, inputs, layer="full")
     return envs
 
@@ -131,10 +132,10 @@ def _pos(n: int, tone: str) -> str:
     return tone if n else "good"
 
 
-def build_posture(envs: dict[str, dict[str, Any]], account: str) -> dict[str, Any]:
+def build_posture(envs: dict[str, dict[str, Any]], account: str | None) -> dict[str, Any]:
     """Fold the reads into the strip's context. Pure over envelopes (the tests feed real ones)."""
     all_accounts = sorted(_of(envs["accounts"].get("nodes", []), T_ACCOUNT), key=lambda n: str(n.get("name") or ""))
-    selected = [n for n in all_accounts if not account or (n.get("name") or "") == account]
+    selected = [n for n in all_accounts if account is None or (n.get("name") or "") == account]
     heads = [
         AccountHead(
             name=str(n.get("name") or ""),
@@ -366,7 +367,7 @@ def build_posture(envs: dict[str, dict[str, Any]], account: str) -> dict[str, An
     ]
     return {
         "posture_error": None,
-        "account_param": account,
+        "account_param": account or "",
         "heads": heads,
         "choose": [
             AccountHead(str(n.get("name") or ""), "", "", "", None, "?" + urlencode({"account": n.get("name") or ""}))
@@ -374,7 +375,7 @@ def build_posture(envs: dict[str, dict[str, Any]], account: str) -> dict[str, An
         ]
         if len(all_accounts) > 1
         else [],
-        "unknown_account": bool(account) and not selected,
+        "unknown_account": account is not None and not selected,
         "sections": sections,
         "empty": not held,
     }
@@ -394,7 +395,8 @@ class DuoPosturePanelType:
     @classmethod
     def get_view_context(cls, panel: Panel, request: HttpRequest) -> dict[str, Any]:
         """Run the reads and fold them; render the failure rather than a blank frame."""
-        account = str(request.GET.get("account", "") or "")
+        raw = request.GET.get("account")
+        account = None if raw is None else str(raw)
         try:
             envs = _fetch(account)
         except Exception:  # noqa: BLE001 — the panel renders its failure, never a blank frame

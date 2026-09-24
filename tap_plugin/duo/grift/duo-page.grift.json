@@ -14,7 +14,7 @@
       "batch_node": {
         "source": "tap_plugin.duo.grift.duo_page",
         "name": "duo page v0.3.0",
-        "description": "The /duo page (req-duo-page): one page, the account-map graph panel with its projection, elevation, layout (account-map.js) and seven scene searches; the posture strip (the plugin's own panel type, req-duo-panel-posture); seven standard tables, each over a search this bundle owns. Every search is scoped by the page's ?account= (the account's name; empty = every account). References no entity outside this file and no instance data: the page renders whatever Duo nodes the grid holds. v0.2.0: the map's graph panel routes a click on an Okta org (a system that requests a second factor) to /okta for that org, through the panel's nav_rules."
+        "description": "The /duo page (req-duo-page): one page, the account-map graph panel with its projection, elevation, layout (account-map.js) and seven scene searches; the posture strip (the plugin's own panel type, req-duo-panel-posture); seven standard tables, each over a search this bundle owns. Every search is scoped by the page's ?account= (the account's name, matched exactly; absent = every account). References no entity outside this file and no instance data: the page renders whatever Duo nodes the grid holds. v0.2.0: the map's graph panel routes a click on an Okta org (a system that requests a second factor) to /okta for that org, through the panel's nav_rules."
       },
       "nodes": [
         {
