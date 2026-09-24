@@ -34,7 +34,8 @@ def _q(name_fragment: str) -> str:
     return "\n".join(matches[0]["definition"]["query"])
 
 
-def _run(name_fragment: str, account: str) -> dict:
+def _run(name_fragment: str, account: str | None) -> dict:
+    """Run one page search; ``None`` is ?account= absent (the schema default), every account."""
     return execute_gryphon_raw(_q(name_fragment), {"account": account}, layer="full")
 
 
@@ -70,10 +71,13 @@ class TestBundle:
             assert "[:" in query or "[e:" in query, name  # every search names the edge types it walks
 
     def test_every_search_takes_the_account_input(self) -> None:
-        """req-duo-page-4: every search accepts ?account= with an empty default."""
+        """req-duo-page-4: every search accepts ?account=, nullable with a null default, and filters with
+        `$account IS NULL OR …`: absent is every account, a name is matched exactly."""
         for name, search in SEARCHES.items():
-            assert search["input_schema"]["properties"]["account"]["default"] == "", name
-            assert "$account" in " ".join(search["definition"]["query"]), name
+            account = search["input_schema"]["properties"]["account"]
+            assert account["type"] == ["string", "null"] and account["default"] is None, name
+            query = " ".join(search["definition"]["query"])
+            assert "$account IS NULL OR" in query and "STARTS_WITH" not in query, name
 
     def test_okta_org_clicks_through_to_okta(self) -> None:
         """req-duo-page-9: the map routes a click on an Okta org to /okta for that org; nothing else navigates.
@@ -124,7 +128,7 @@ class TestSearches:
             "engineers",
             "contractors",
         }
-        assert "Other VPN" in _names(_run("account, applications, policies, groups", ""))
+        assert "Other VPN" in _names(_run("account, applications, policies, groups", None))
 
     def test_scene_edges(self) -> None:
         seed_estate()
@@ -147,7 +151,7 @@ class TestSearches:
         """req-duo-page-7: bypass, locked out, not enrolled AND enrollment-not-observed are listed; the other account's are not."""
         seed_estate()
         assert _names(_run("users not doing MFA", "Duo Federal")) == {"bob", "carol", "dave", "erin"}
-        assert "mallory" in _names(_run("users not doing MFA", ""))
+        assert "mallory" in _names(_run("users not doing MFA", None))
 
     def test_assignments_and_codes_rows(self) -> None:
         seed_estate()
@@ -251,9 +255,9 @@ class TestPosture:
         for key, query in QUERIES.items():
             assert key == "accounts" or "[:" in query, key
 
-    def test_named_account_is_exact_and_collision_is_reported(self) -> None:
-        """req-duo-panel-posture-5: with accounts "A" and "ABA", ?account=A counts A alone and names
-        ABA as a collision the tables cannot separate; the page's search does include ABA (tap#360)."""
+    def test_named_account_is_exact(self) -> None:
+        """req-duo-panel-posture-5: with accounts "A" and "ABA", ?account=A counts A alone, and so do the
+        page's searches: an account whose name merely starts and ends with "A" is not selected."""
         from tap_grid.services import WriteOperation, create_node, write_batch
 
         ids = {}
@@ -274,8 +278,9 @@ class TestPosture:
         ctx = build_posture(_fetch("A"), "A")
         tiles = {(s.key, t.label): t for s in ctx["sections"] for t in s.tiles}
         assert tiles[("coverage", "Users")].value == 1
-        assert ctx["ambiguous_with"] == ["ABA"]
-        assert len(_run("users not doing MFA", "A")["nodes"]) == 2  # the documented limit of the page searches
+        assert "ambiguous_with" not in ctx
+        assert len(_run("users not doing MFA", "A")["nodes"]) == 1
+        assert len(_run("users not doing MFA", None)["nodes"]) == 2
 
 
 def _panel_id(slug: str) -> str:

@@ -29,9 +29,6 @@ A tile in the look tone is a count of things NOT OBSERVED — unknown, never zer
     {% endif %}
   </header>
 
-  {% if ambiguous_with %}
-    <p class="duo-posture__error" role="alert">This strip counts “{{ account_param }}” alone, but the tables below cannot: they select accounts whose name starts and ends with “{{ account_param }}”, so they also include {{ ambiguous_with|join:", " }}. Gryphon has no exact-or-all account filter yet (tap#360).</p>
-  {% endif %}
   {% if posture_error %}
     <p class="duo-posture__error">{{ posture_error }}</p>
   {% elif not heads %}
