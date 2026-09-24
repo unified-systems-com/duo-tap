@@ -9,7 +9,7 @@
 | Slug | `duo` |
 | Display name | TAP Duo |
 | Description | Duo multi-factor authentication as grid vocabulary: the account, its users and groups, their authenticators (phones, hardware tokens, WebAuthn credentials, bypass codes), the protected applications and the policies they enforce, administrators and endpoints — and the /duo operator page over them. |
-| Kind | Leaf plugin: Duo vocabulary. Consumes no plugin (`depends_on` is empty; the edges toward other systems have open ends). Consumed by instance plugins that place Duo in a design (highbar first) and, through its open-ended edges, by any plugin whose system uses Duo (an Okta org, a VPN). |
+| Kind | Leaf plugin: Duo vocabulary. Depends only on the neutral substrate `identity_core` (a vocabulary dependency: a Duo user or administrator is held by an `identity_core__human`); every other edge toward another system has an open end. Consumed by instance plugins that place Duo in a design (highbar first) and, through its open-ended edges, by any plugin whose system uses Duo (an Okta org, a VPN). |
 
 **Default dimensions**
 
@@ -64,7 +64,7 @@ Three states hold for every observed field: blank or null means *not observed*, 
 | req-duo-layout-account-map | [Layout: Account Map](#layout-account-map) | In Development | Reusable layout module; never executed in a browser yet |
 | req-duo-record | [CI Record and Tests](#ci-record-and-tests) | Implemented | The in-package `ci` record now seeds the page bundle |
 | req-duo-collector | [Collector](#collector) | Backlog | Observe real Duo state through the Admin API |
-| req-duo-person-convergence | [Person Convergence](#person-convergence) | Backlog | Needs a neutral person type in a substrate (gap) |
+| req-duo-person-convergence | [Person Convergence](#person-convergence) | Implemented | Users and administrators declare `HELD_BY_HUMAN__identity_core` to `identity_core__human` |
 | req-duo-directory-sync | [Directory Sync](#directory-sync) | Backlog | Where users and groups come from |
 | req-duo-admin-units | [Administrative Units](#administrative-units) | Backlog | Scoped administration |
 | req-duo-sso-depth | [Duo SSO Depth](#duo-sso-depth) | Backlog | Service-provider metadata and authentication sources |
@@ -480,7 +480,7 @@ The in-package `ci` boot record (`req-boot-bootstrap-ci-record`) and the tests t
 
 #### Implementation
 
-`tap_plugin/duo/boot/ci.boot.json` installs duo alone (no dependencies) and seeds its own GRIFT, offline and credential-free; the consumer flips self to editable. Tests: `test_duo_manifest.py` (validation, structure and strict), `test_duo_account.py`, `test_duo_corpus.py` (every model and edge), `test_duo_page.py` (bundle, searches over a seeded two-account estate from `tests/seed.py`, posture, server-side render).
+`tap_plugin/duo/boot/ci.boot.json` installs its `depends_on` closure (`identity_core`, pinned at a git commit) and duo and seeds its own GRIFT, offline and credential-free; the consumer flips self to editable. Tests: `test_duo_manifest.py` (validation, structure and strict), `test_duo_account.py`, `test_duo_corpus.py` (every model and edge), `test_duo_page.py` (bundle, searches over a seeded two-account estate from `tests/seed.py`, posture, server-side render).
 
 #### Acceptance Criteria
 
@@ -503,9 +503,17 @@ Observe a real Duo account through the Admin API with a read-only Admin API appl
 ----
 RID: `req-duo-person-convergence`
 
-Status: `Backlog`
+Status: `Implemented`
 
-Link a Duo user and a Duo administrator to the human they belong to, as Cartography's `(:Human)-[:IDENTITY_DUO]->(:DuoUser)` does. Blocked on a neutral person/principal type, which no substrate owns (identity_core holds `organization` and `oidc_issuer` only). Email is not identity: the link needs a declared matching rule, not an email join.
+Link a Duo user and a Duo administrator to the human they belong to, as Cartography's `(:Human)-[:IDENTITY_DUO]->(:DuoUser)` does. The human is `identity_core__human` (a neutral substrate type, keyed on an operator-assigned handle), and the link is identity_core's `HELD_BY_HUMAN__identity_core`, whose source is wildcard so no substrate depends upward on Duo. `DuoUser` and `DuoAdministrator` declare it in `OUTBOUND_EDGES` (`{"nodes": [{"type": "identity_core__human"}], "edges": [{"type": "HELD_BY_HUMAN__identity_core"}]}`), which makes `identity_core` a declared vocabulary dependency (`depends_on`, and the `ci` record installs it). Email is not identity: the edge is drawn by whoever knows the match (an operator's seed, an HR feed, a collector matching an immutable id) and records how in its `matched_on` property; nothing here joins on `email`. A user with no such edge is unmatched, and one with two is a shared account; both are access-review findings the graph shows rather than refuses.
+
+#### Acceptance Criteria
+
+| ACID | Title | Status | Description | Notes |
+| --- | --- | :---: | --- | --- |
+| req-duo-person-convergence-1 | Declared On Both Account Types | Implemented | `DuoUser` and `DuoAdministrator` declare `HELD_BY_HUMAN__identity_core` to `identity_core__human` in `OUTBOUND_EDGES`, and `identity_core` is in `depends_on`. | `test_person_convergence_is_declared` |
+| req-duo-person-convergence-2 | Written Through The Service Layer | Implemented | A Duo user and an administrator each write `HELD_BY_HUMAN__identity_core` to a human with `matched_on`; an unknown property is refused. | `test_account_is_held_by_a_human` |
+| req-duo-person-convergence-3 | Shared Account Recorded | Implemented | One Duo user may be held by two humans; both edges stand. | `test_shared_account_is_recorded` |
 
 ### Directory Sync
 ----

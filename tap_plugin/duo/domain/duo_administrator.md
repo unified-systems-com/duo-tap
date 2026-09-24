@@ -52,7 +52,7 @@ The documented read is the Admin API with an Admin API application granted *Gran
 
 - `admin_id` — Duo's administrator id (`DE…`). The natural key.
 - `name` — The administrator's name.
-- `email` — The administrator's email — their Admin Panel login. Not identity; kept for the future person convergence.
+- `email` — The administrator's email — their Admin Panel login. Not identity: the person behind the login is reached by `HELD_BY_HUMAN__identity_core` to `identity_core__human` (declared in `OUTBOUND_EDGES`), never by matching this address.
 - `role` — The administrator's role as reported: `Owner`, `Administrator`, `Application Manager`, `User Manager`, `Security Analyst`, `Help Desk`, `Billing`, `Read-only`, or a custom role's name. Kept as a string because custom roles exist.
 - `status` — As reported: `Active`, `Disabled`, `Expired` (blocked for inactivity), or `Pending Activation`. Blank means not observed.
 - `last_login` — The administrator's last Admin Panel login.
