@@ -245,3 +245,27 @@ def test_name_keyed_types_refuse_a_missing_account(type_slug) -> None:
     refused, because without the account the key cannot tell two accounts' objects apart."""
     assert not create_node(type_slug, {"name": "Global Policy"}).success
     assert create_node(type_slug, {"account_name": "one", "name": "Global Policy"}).success
+
+
+@pytest.mark.django_db
+def test_backfill_takes_the_holding_accounts_name() -> None:
+    """Migration 0005: an object written before account_name existed takes the name of the one
+    live account holding it; an object held by two accounts is left empty rather than guessed."""
+    import importlib
+
+    from django.apps import apps as django_apps
+
+    backfill = importlib.import_module("tap_plugin.duo.migrations.0005_backfill_account_name").backfill_account_name
+    one = create_node("duo__duo_account", {"name": "one"}).entity_id
+    two = create_node("duo__duo_account", {"name": "two"}).entity_id
+    held = create_node("duo__duo_policy", {"account_name": "x", "name": "Global Policy"}).entity_id
+    shared = create_node("duo__duo_group", {"account_name": "x", "name": "everyone"}).entity_id
+    assert _edge(one, held, "HOLDS_ACCOUNT_OBJECT__duo").success
+    assert _edge(one, shared, "HOLDS_ACCOUNT_OBJECT__duo").success
+    assert _edge(two, shared, "HOLDS_ACCOUNT_OBJECT__duo").success
+    policy, group = _model("duo__duo_policy"), _model("duo__duo_group")
+    policy.all_objects.filter(entity_id=held).update(account_name="")  # as written before 0004
+    group.all_objects.filter(entity_id=shared).update(account_name="")
+    backfill(django_apps, None)
+    assert policy.all_objects.get(entity_id=held).account_name == "one"
+    assert group.all_objects.get(entity_id=shared).account_name == ""
