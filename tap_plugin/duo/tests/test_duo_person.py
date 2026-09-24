@@ -37,13 +37,15 @@ def _held(src: str, dst: str, properties: dict | None = None):
 @pytest.mark.parametrize("model", [DuoUser, DuoAdministrator])
 def test_person_convergence_is_declared(model) -> None:
     """req-duo-person-convergence-1: both account types name the edge and the human, and the edge's owner is a
-    declared dependency."""
+    declared dependency, floored at the release that ships the human."""
     declared = {
         (e["type"], n["type"]) for entry in model.OUTBOUND_EDGES for e in entry["edges"] for n in entry.get("nodes", [])
     }
     assert (HELD, HUMAN) in declared
     manifest = tomllib.loads((PKG / "tap-plugin.toml").read_text())
-    assert "identity_core" in {d["slug"] for d in manifest.get("depends_on", [])}
+    deps = {d["slug"]: d for d in manifest.get("depends_on", [])}
+    # The floor is the first identity_core release that ships identity_core__human.
+    assert deps["identity_core"].get("min_version") == "0.1.3"
 
 
 @pytest.mark.django_db

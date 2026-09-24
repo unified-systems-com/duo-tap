@@ -6,15 +6,15 @@
   "batches": [
     {
       "batch_entity": {
-        "entity_id": "01a0cc71-e9cb-7519-9f63-7222430064a2",
+        "entity_id": "01a0d490-b075-76f8-97d6-c855c957643d",
         "entity_type": "batch",
-        "name": "duo page v0.1.0",
+        "name": "duo page v0.2.0",
         "dimensions": {}
       },
       "batch_node": {
         "source": "tap_plugin.duo.grift.duo_page",
-        "name": "duo page v0.1.0",
-        "description": "The /duo page (req-duo-page): one page, the account-map graph panel with its projection, elevation, layout (account-map.js) and seven scene searches; the posture strip (the plugin's own panel type, req-duo-panel-posture); seven standard tables, each over a search this bundle owns. Every search is scoped by the page's ?account= (the account's name; empty = every account). References no entity outside this file and no instance data: the page renders whatever Duo nodes the grid holds."
+        "name": "duo page v0.2.0",
+        "description": "The /duo page (req-duo-page): one page, the account-map graph panel with its projection, elevation, layout (account-map.js) and seven scene searches; the posture strip (the plugin's own panel type, req-duo-panel-posture); seven standard tables, each over a search this bundle owns. Every search is scoped by the page's ?account= (the account's name; empty = every account). References no entity outside this file and no instance data: the page renders whatever Duo nodes the grid holds. v0.2.0: the map's graph panel routes a click on an Okta org (a system that requests a second factor) to /okta for that org, through the panel's nav_rules."
       },
       "nodes": [
         {
@@ -91,12 +91,18 @@
           "node": {
             "name": "Duo account map",
             "slug": "duo-account-map",
-            "description": "The account at the centre; its protected applications on the left with whatever sends users to them (an Okta org, a VPN) further out; the policies they enforce on the right; the groups they admit below; the enrolled-device types above, one tile per kind with its count. Lines are policy enforcement (application → policy) and group access (application → group); tenancy is the layout itself. An application with no line to a policy runs under the Global Policy.",
+            "description": "The account at the centre; its protected applications on the left with whatever sends users to them (an Okta org, a VPN) further out; the policies they enforce on the right; the groups they admit below; the enrolled-device types above, one tile per kind with its count. Lines are policy enforcement (application → policy) and group access (application → group); tenancy is the layout itself. An application with no line to a policy runs under the Global Policy. Click an Okta org to open its /okta page.",
             "view": "tap_viz/panels/graph_panel.html",
             "editor_view": "",
             "config": {
               "height": "100%",
-              "hide_header": true
+              "hide_header": true,
+              "nav_rules": [
+                {
+                  "entity_type": "okta__okta_org",
+                  "url_template": "/okta?org={data.name}"
+                }
+              ]
             }
           }
         },
