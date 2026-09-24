@@ -8,6 +8,7 @@ contract rests on.
 from __future__ import annotations
 
 import json
+import tomllib
 from pathlib import Path
 
 import jsonschema
@@ -73,6 +74,20 @@ class TestBundle:
         for name, search in SEARCHES.items():
             assert search["input_schema"]["properties"]["account"]["default"] == "", name
             assert "$account" in " ".join(search["definition"]["query"]), name
+
+    def test_okta_org_clicks_through_to_okta(self) -> None:
+        """req-duo-page-9: the map routes a click on an Okta org to /okta for that org; nothing else navigates.
+        The rule is panel config naming a page path, not a dependency: duo still declares none on okta."""
+        from tap_viz.panels.graph_panel import _apply_nav_rules
+
+        panel = next(n for n in NODES if n["entity"]["entity_type"] == "panel" and n["node"]["view"] == "tap_viz/panels/graph_panel.html")
+        org = {"entity_type": "okta__okta_org", "data": {"name": "Acme Okta"}}
+        app = {"entity_type": "duo__duo_application", "data": {"name": "Okta"}}
+        _apply_nav_rules([org, app], panel["node"]["config"]["nav_rules"], "duo-account-map")
+        assert org["display"]["tap_viz"]["nav_url"] == "/okta?org=Acme%20Okta"
+        assert "display" not in app
+        manifest = tomllib.loads((BUNDLE.parents[1] / "tap-plugin.toml").read_text())
+        assert "okta" not in {d["slug"] for d in manifest.get("depends_on", [])}
 
     def test_no_dotted_dimension_paths(self) -> None:
         """Dotted dimension keys must be bracketed in Gryphon; a dotted path silently matches nothing."""

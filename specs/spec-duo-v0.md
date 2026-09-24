@@ -401,9 +401,11 @@ The operator's front page for one Duo account in a live FedRAMP 20x environment,
 
 #### Implementation
 
-`tap_plugin/duo/grift/duo-page.grift.json` (registered as `[grift] duo_page`): one batch holding the page (`/duo`, full bleed, one column), nine panels, their searches, and the map's projection → elevation → layout. Slots, top to bottom: `map` (graph panel, `60vh`, projection `node_style: {"mode": "icon-badge"}`, `lock_nodes`, fitted), `posture` (`duo/panels/duo_posture.html`), and seven standard table panels — `applications`, `assignments`, `policies`, `users`, `bypass-codes`, `admins`, `endpoints` — each bound to a search this bundle owns (envelope mode for node tables, projection mode for the assignment and bypass-code rows). The map mounts seven scene searches, each naming the edge types it walks; none is an unfiltered edge search.
+`tap_plugin/duo/grift/duo-page.grift.json` (registered as `[grift] duo_page`): one batch (`duo page v0.2.0`) holding the page (`/duo`, full bleed, one column), nine panels, their searches, and the map's projection → elevation → layout. Slots, top to bottom: `map` (graph panel, `60vh`, projection `node_style: {"mode": "icon-badge"}`, `lock_nodes`, fitted), `posture` (`duo/panels/duo_posture.html`), and seven standard table panels — `applications`, `assignments`, `policies`, `users`, `bypass-codes`, `admins`, `endpoints` — each bound to a search this bundle owns (envelope mode for node tables, projection mode for the assignment and bypass-code rows). The map mounts seven scene searches, each naming the edge types it walks; none is an unfiltered edge search.
 
 **The account parameter.** Every search declares `account` (string, default `""`) and filters `a.name STARTS_WITH $account AND a.name ENDS_WITH $account`. The account's natural key is its `name`, so `?account=` takes the name rather than the entity id: Gryphon has no param-absent predicate (tap#360) and `entity_id` admits no string operator (probed 2026-09-22: `STARTS_WITH` / `=~` on `a.entity_id` fail with `Unsupported lookup ... for OneToOneField`, and `= ""` fails UUID validation), so the name pair is the one predicate that selects every account when the input is empty and exactly one when it is set. The limit is real: a name that another account's name both starts and ends with (`A` beside `ABA`) makes the page's tables and map include both. The posture strip, which is Python, reads exactly (`a.name = $account`) whenever an account is named and raises an alert naming the colliding accounts, so the page never presents the mixed tables unannounced. Revisit when tap#360 lands: then every search becomes exact-or-all and `?account=` can take the entity id.
+
+**Click-through.** The map's graph panel config carries one `nav_rules` entry (spec-viz-panel.md, `req-viz-panel-click-semantics-8`): an `okta__okta_org` node navigates to `/okta?org={data.name}`, the org page for the org that sends its users here. It is the narrow form: a page path named in this bundle's panel config. The generic form, where the plugin that owns a node type declares the page that answers for it, does not exist in tap_viz yet.
 
 **What the page cannot say.** An application missing from the assignment table enforces no custom policy and runs under the Global Policy (OPTIONAL MATCH cannot yet express the left join over a traversal). Every table and tile counts only what the grid holds: on a designed account before a collector runs, zero means nothing observed.
 
@@ -419,6 +421,7 @@ The operator's front page for one Duo account in a live FedRAMP 20x environment,
 | req-duo-page-6 | Account-Scoped Scene | Implemented | Each scene and table search returns the selected account's objects and none of another account's; empty selects all; an unknown name selects nothing. | `TestSearches` |
 | req-duo-page-7 | Users In Three States | Implemented | The users table lists bypass, locked out, disabled, not enrolled and enrollment-not-observed users. | `test_users_attention_three_states` |
 | req-duo-page-8 | Renders Server-Side | Implemented | `/duo?account=…` and its posture, table and graph fragments return 200 with the selected account's content and not the other's. | `test_page_and_fragments_render` (Django test client). Browser rendering (Cytoscape, Tabulator) not yet observed. |
+| req-duo-page-9 | Okta Org Clicks Through | Implemented | The map's graph panel carries `nav_rules` routing an `okta__okta_org` node (the source of a `REQUESTS_SECOND_FACTOR__duo` edge) to `/okta?org=<its name>`; no other node navigates. The rule is panel config naming a page path, not a dependency: duo declares none on okta, and on a grid without okta no node matches. /okta carries the mirror rule to `/duo?account=`. | `test_okta_org_clicks_through_to_okta`; clicked in a browser on the highbar stack 2026-09-24. |
 
 ---
 
@@ -480,7 +483,7 @@ The in-package `ci` boot record (`req-boot-bootstrap-ci-record`) and the tests t
 
 #### Implementation
 
-`tap_plugin/duo/boot/ci.boot.json` installs its `depends_on` closure (`identity_core`, pinned at a git commit) and duo and seeds its own GRIFT, offline and credential-free; the consumer flips self to editable. Tests: `test_duo_manifest.py` (validation, structure and strict), `test_duo_account.py`, `test_duo_corpus.py` (every model and edge), `test_duo_page.py` (bundle, searches over a seeded two-account estate from `tests/seed.py`, posture, server-side render).
+`tap_plugin/duo/boot/ci.boot.json` installs its `depends_on` closure (`identity_core`, pinned at the full commit of its `v0.1.3` tag, the `depends_on` floor) and duo and seeds its own GRIFT, offline and credential-free; the consumer flips self to editable. Tests: `test_duo_manifest.py` (validation, structure and strict), `test_duo_account.py`, `test_duo_corpus.py` (every model and edge), `test_duo_page.py` (bundle, searches over a seeded two-account estate from `tests/seed.py`, posture, server-side render).
 
 #### Acceptance Criteria
 
@@ -511,7 +514,7 @@ Link a Duo user and a Duo administrator to the human they belong to, as Cartogra
 
 | ACID | Title | Status | Description | Notes |
 | --- | --- | :---: | --- | --- |
-| req-duo-person-convergence-1 | Declared On Both Account Types | Implemented | `DuoUser` and `DuoAdministrator` declare `HELD_BY_HUMAN__identity_core` to `identity_core__human` in `OUTBOUND_EDGES`, and `identity_core` is in `depends_on`. | `test_person_convergence_is_declared` |
+| req-duo-person-convergence-1 | Declared On Both Account Types | Implemented | `DuoUser` and `DuoAdministrator` declare `HELD_BY_HUMAN__identity_core` to `identity_core__human` in `OUTBOUND_EDGES`, and `identity_core` is in `depends_on` with `min_version = "0.1.3"`. | `test_person_convergence_is_declared` |
 | req-duo-person-convergence-2 | Written Through The Service Layer | Implemented | A Duo user and an administrator each write `HELD_BY_HUMAN__identity_core` to a human with `matched_on`; an unknown property is refused. | `test_account_is_held_by_a_human` |
 | req-duo-person-convergence-3 | Shared Account Recorded | Implemented | One Duo user may be held by two humans; both edges stand. | `test_shared_account_is_recorded` |
 
