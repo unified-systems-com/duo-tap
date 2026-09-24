@@ -9,7 +9,7 @@
 | Slug | `duo` |
 | Display name | TAP Duo |
 | Description | Duo multi-factor authentication as grid vocabulary: the account, its users and groups, their authenticators (phones, hardware tokens, WebAuthn credentials, bypass codes), the protected applications and the policies they enforce, administrators and endpoints — and the /duo operator page over them. |
-| Kind | Leaf plugin: Duo vocabulary. Depends only on the neutral substrate `identity_core` (a vocabulary dependency: a Duo user or administrator is held by an `identity_core__human`); every other edge toward another system has an open end. Consumed by instance plugins that place Duo in a design (highbar first) and, through its open-ended edges, by any plugin whose system uses Duo (an Okta org, a VPN). |
+| Kind | Leaf plugin: Duo vocabulary. Depends only on the neutral substrates `identity_core` and `computing_core` (vocabulary dependencies: a Duo user or administrator is held by an `identity_core__human`, and a Duo endpoint represents a `computing_core__host`); every other edge toward another system has an open end. Consumed by instance plugins that place Duo in a design (highbar first) and, through its open-ended edges, by any plugin whose system uses Duo (an Okta org, a VPN). |
 
 **Default dimensions**
 
@@ -65,6 +65,7 @@ Three states hold for every observed field: blank or null means *not observed*, 
 | req-duo-record | [CI Record and Tests](#ci-record-and-tests) | Implemented | The in-package `ci` record now seeds the page bundle |
 | req-duo-collector | [Collector](#collector) | Backlog | Observe real Duo state through the Admin API |
 | req-duo-person-convergence | [Person Convergence](#person-convergence) | Implemented | Users and administrators declare `HELD_BY_HUMAN__identity_core` to `identity_core__human` |
+| req-duo-host-link | [Host Link](#host-link) | Implemented | `duo__duo_endpoint` declares `REPRESENTS_HOST__computing_core` to `computing_core__host` |
 | req-duo-directory-sync | [Directory Sync](#directory-sync) | Backlog | Where users and groups come from |
 | req-duo-admin-units | [Administrative Units](#administrative-units) | Backlog | Scoped administration |
 | req-duo-sso-depth | [Duo SSO Depth](#duo-sso-depth) | Backlog | Service-provider metadata and authentication sources |
@@ -517,6 +518,35 @@ Link a Duo user and a Duo administrator to the human they belong to, as Cartogra
 | req-duo-person-convergence-1 | Declared On Both Account Types | Implemented | `DuoUser` and `DuoAdministrator` declare `HELD_BY_HUMAN__identity_core` to `identity_core__human` in `OUTBOUND_EDGES`, and `identity_core` is in `depends_on` with `min_version = "0.1.3"`. | `test_person_convergence_is_declared` |
 | req-duo-person-convergence-2 | Written Through The Service Layer | Implemented | A Duo user and an administrator each write `HELD_BY_HUMAN__identity_core` to a human with `matched_on`; an unknown property is refused. | `test_account_is_held_by_a_human` |
 | req-duo-person-convergence-3 | Shared Account Recorded | Implemented | One Duo user may be held by two humans; both edges stand. | `test_shared_account_is_recorded` |
+
+### Host Link
+----
+RID: `req-duo-host-link`
+
+Status: `Implemented`
+
+A Duo endpoint is Duo's record of a device a user authenticated from, not the machine itself. The machine is `computing_core__host`, a neutral substrate node
+keyed on an operator-assigned asset tag, so the same laptop's Okta, Duo, Teleport, MDM and EDR records
+converge on one node, and that host reaches the person it is issued to with computing_core's
+`ASSIGNED_TO_HUMAN`. The link is computing_core's `REPRESENTS_HOST__computing_core`, whose source is
+wildcard so the substrate never depends on this plugin (the pattern of `HELD_BY_HUMAN__identity_core`).
+
+#### Implementation
+
+`DuoEndpoint.OUTBOUND_EDGES` declares `{"nodes": [{"type": "computing_core__host"}], "edges": [{"type":
+"REPRESENTS_HOST__computing_core"}]}`. Under the permission union (`req-grid-edge-constraints-3`) this adds a
+permission and constrains nothing else. `computing_core` joins `depends_on` as a vocabulary dependency (no
+Python import); the `ci` record pins it at `daa040dbfbe11a390c02d22c7e4947b39face4b7`, the tap-plugin-computing-core commit that adds
+`host` and the edge. No tagged release carries them yet, so no `min_version` floor is declared; the floor
+lands when computing_core is released. The edge is drawn by whoever knows the match and records how in
+`matched_on` (a serial number, an asset tag, an operator seed); nothing joins on a hostname.
+
+#### Acceptance Criteria
+
+| ACID | Title | Status | Description | Notes |
+| --- | --- | :---: | --- | --- |
+| req-duo-host-link-1 | Declared On The Device Record | Implemented | `DuoEndpoint` declares `REPRESENTS_HOST__computing_core` to `computing_core__host`; `computing_core` is in `depends_on`; the record's own edges are still accepted. | `tests/test_duo_host.py::test_host_link_is_declared`, `::test_record_keeps_its_own_edges` |
+| req-duo-host-link-2 | Written Through The Service Layer | Implemented | The record writes the edge to a host with `matched_on`; an unknown property is refused (on a fresh pair). | `tests/test_duo_host.py::test_record_represents_a_host`, `::test_unknown_property_is_refused` |
 
 ### Directory Sync
 ----

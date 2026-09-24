@@ -8,8 +8,11 @@ description = "Duo multi-factor authentication as grid vocabulary: the account, 
 # Vocabulary dependency (add-edge, cross-plugin endpoints): a Duo user or administrator is held by
 # identity_core's neutral human (HELD_BY_HUMAN__identity_core, declared in their OUTBOUND_EDGES). No
 # Python import; install + migrate order only.
+# computing_core is the same kind of dependency: the device record declares its REPRESENTS_HOST to the
+# neutral host (req-duo-host-link).
 depends_on = [
     { slug = "identity_core", min_version = "0.1.3", note = "Vocabulary dependency: duo__duo_user and duo__duo_administrator declare HELD_BY_HUMAN__identity_core to identity_core__human, the one person every system's account resolves to." },
+    { slug = "computing_core", note = "Vocabulary dependency: duo__duo_endpoint declares REPRESENTS_HOST__computing_core to computing_core__host, the neutral machine every vendor device record converges on. No min_version until a computing_core release carries host." },
 ]
 
 # Pure Python, no dependencies, no crypto (spec-fips.md, req-tap-plugin-manifest-v0-fips).
@@ -51,5 +54,5 @@ duo_page = "grift/duo-page.grift.json"
 # of the record; regenerate with scripts/boot-record-hash --refresh in a core checkout.
 [[boot.records]]
 name = "ci"
-description = "RESERVED NAME (req-boot-bootstrap-ci-record): the stack this plugin's own tests run in — depends_on closure (identity_core, pinned at a git commit) + self; network only to install those pinned sources, credential-free. The consumer flips self to editable."
-sha256 = "5ac38b7f57ce682dfeb18f449f03ad529781cabf588331bc3c4382219a3bef3d"
+description = "RESERVED NAME (req-boot-bootstrap-ci-record): the stack this plugin's own tests run in — depends_on closure (identity_core and computing_core, pinned at a git commit) + self; network only to install those pinned sources, credential-free. The consumer flips self to editable."
+sha256 = "3e152462290a01f008d45fbfbbac1de9f83ebd7bb835675f8acc4bc01b453e56"
