@@ -12,24 +12,24 @@ The two questions an operator asks of MFA daily are both about users: *who is no
 
 - Make bypass, lockout and non-enrollment answerable as a filter.
 - Anchor every authenticator and bypass code to a person.
-- Carry the email a future neutral person node converges on, without keying on it.
+- Resolve the account to the one person who holds it (`HELD_BY_HUMAN__identity_core`), without keying on email.
 
 ## Identity
 
-Natural key: **`user_id`**, Duo's `DU…` id, unique across Duo and stable across renames. Users are observed, never designed — a design has no reason to seed an individual user — so the id is `CREATE_REQUIRED`. Username is a mutable attribute and is deliberately not the key.
+Natural key: **`user_id`**, Duo's `DU…` id, unique across Duo and stable across renames. An observed user has the id at creation, so it is `CREATE_REQUIRED`; a design that seeds a user (an instance's staging cast) supplies a placeholder that cannot be mistaken for a Duo id, and a collector's observation of the real account is a different node until the design is re-seeded with the observed id. Username is a mutable attribute and is deliberately not the key.
 
 Stamped `duo.surface: directory` by default ([`duo.surface`](dimensions/duo.surface.md)).
 
 ## Boundaries
 
-- **Not a person.** A Duo user is one identity source's record; converging it with the same human's Okta user or GitHub account needs a neutral person type that no substrate owns yet (named as a gap in the spec).
+- **Not a person.** A Duo user is one identity source's record. The person is `identity_core__human`, and the account points at it with `HELD_BY_HUMAN__identity_core` (declared in `OUTBOUND_EDGES`), so the same human's Okta, Teleport and GitLab accounts converge on one node. The edge is drawn by whoever knows the match (an operator's seed, an HR feed, a collector matching an immutable id), never inferred from `email`. An account with no such edge is unmatched, which is itself what an access review looks for; an account with two is shared.
 - **Not aliases.** Up to four aliases per user; a field-level concern for a collector, not modelled.
 - **Bypass codes are not a field here.** They have their own identity, expiry and issuer — see [`duo_bypass_code`](duo_bypass_code.md).
 - **Not the authentication log.** `last_login` is the one summary this node carries.
 
 ## Neutrality
 
-**Vendor-specific.** The status vocabulary (`bypass` especially) and the enrollment model are Duo's. The neutral half — a human — is the gap.
+**Vendor-specific.** The status vocabulary (`bypass` especially) and the enrollment model are Duo's. The neutral half is `identity_core__human`, reached by `HELD_BY_HUMAN__identity_core`.
 
 ## Observability
 
@@ -54,7 +54,7 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `user_id` — Duo's user id (`DU…`, 20 characters). The natural key.
 - `username` — The username Duo matches at primary authentication. Display name of the node. Aliases are not modelled.
 - `realname` — The user's full name as Duo holds it.
-- `email` — The user's email as Duo holds it. Not identity (email is not identity): it is the fact a future neutral person node would match on, as Cartography's `Human` does, and nothing here keys on it.
+- `email` — The user's email as Duo holds it. Not identity (email is not identity): Cartography's `Human` matches on it; TAP does not, because a shared or reassigned address would join two people. The person link is the explicit `HELD_BY_HUMAN__identity_core` edge, and nothing here keys on `email`.
 - `status` — Duo's user status, as reported: `active` (must complete MFA), `bypass` (skips MFA), `disabled`, `locked out`, or `pending deletion`. Blank means not observed. `bypass` is the single most important value on this node for a FedRAMP reviewer.
 - `is_enrolled` — Whether the user has at least one authenticator enrolled (Duo's `is_enrolled`). Null means not observed — never read it as false.
 - `last_login` — Duo's last successful login for the user. Null means not observed, or never logged in; Duo reports null for both, so a collector records which.

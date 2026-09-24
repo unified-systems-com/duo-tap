@@ -22,8 +22,8 @@ class DuoUser(BaseModel):
     # The Duo surface this type belongs to (domain/dimensions/duo.surface.md). No dcom or
     # deployment.environment default: those belong to the observation, not the type.
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "directory"}
-    # Duo's own user id (DU…), stable across renames and unique across Duo. Users are observed,
-    # never designed, so the observed id is available at creation.
+    # Duo's own user id (DU…), stable across renames and unique across Duo. An observed user has it at
+    # creation; a design that seeds a user supplies a placeholder that cannot be mistaken for Duo's.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("user_id",)
     # Edge permission (union with the edge definitions' own sources/targets); declared so the
     # containment declaration can name it (req-grid-service-delete-cascade-12).
@@ -34,6 +34,7 @@ class DuoUser(BaseModel):
         {"nodes": [{"type": "duo__duo_webauthn_credential"}], "edges": [{"type": "ENROLLS_WEBAUTHN_CREDENTIAL__duo"}]},
         {"nodes": [{"type": "duo__duo_bypass_code"}], "edges": [{"type": "HOLDS_BYPASS_CODE__duo"}]},
         {"nodes": [{"type": "duo__duo_endpoint"}], "edges": [{"type": "AUTHENTICATES_FROM_ENDPOINT__duo"}]},
+        {"nodes": [{"type": "identity_core__human"}], "edges": [{"type": "HELD_BY_HUMAN__identity_core"}]},
     ]
     # What retires with this node (domain article: Identity / Boundaries).
     CONTAINMENT_EDGES: ClassVar[tuple[str, ...]] = ("ENROLLS_WEBAUTHN_CREDENTIAL__duo", "HOLDS_BYPASS_CODE__duo")

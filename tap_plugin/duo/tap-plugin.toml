@@ -5,6 +5,13 @@ slug = "duo"
 name = "TAP Duo"
 description = "Duo multi-factor authentication as grid vocabulary: the account, its users and groups, their authenticators (phones, hardware tokens, WebAuthn credentials, bypass codes), the protected applications and the policies they enforce, administrators and endpoints — and the /duo operator page over them."
 
+# Vocabulary dependency (add-edge, cross-plugin endpoints): a Duo user or administrator is held by
+# identity_core's neutral human (HELD_BY_HUMAN__identity_core, declared in their OUTBOUND_EDGES). No
+# Python import; install + migrate order only.
+depends_on = [
+    { slug = "identity_core", note = "Vocabulary dependency: duo__duo_user and duo__duo_administrator declare HELD_BY_HUMAN__identity_core to identity_core__human, the one person every system's account resolves to." },
+]
+
 # Pure Python, no dependencies, no crypto (spec-fips.md, req-tap-plugin-manifest-v0-fips).
 [fips]
 status = "compatible"
@@ -45,4 +52,4 @@ duo_page = "grift/duo-page.grift.json"
 [[boot.records]]
 name = "ci"
 description = "RESERVED NAME (req-boot-bootstrap-ci-record): the stack this plugin's own tests run in — depends_on closure (empty) + self, offline, credential-free. The consumer flips self to editable."
-sha256 = "fc24553d766629e1f1c26e8c2dacc399d3cdb82d473e36047d98f9cfa98c6594"
+sha256 = "ab9060919a77142b7f8ff2315d28dbe52d5c55aab9f454cdd8998cd0c27bc1f7"

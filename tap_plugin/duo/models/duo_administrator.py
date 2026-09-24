@@ -30,6 +30,7 @@ class DuoAdministrator(BaseModel):
         {"nodes": [{"type": "duo__duo_phone"}], "edges": [{"type": "ENROLLS_PHONE__duo"}]},
         {"nodes": [{"type": "duo__duo_hardware_token"}], "edges": [{"type": "ENROLLS_HARDWARE_TOKEN__duo"}]},
         {"nodes": [{"type": "duo__duo_webauthn_credential"}], "edges": [{"type": "ENROLLS_WEBAUTHN_CREDENTIAL__duo"}]},
+        {"nodes": [{"type": "identity_core__human"}], "edges": [{"type": "HELD_BY_HUMAN__identity_core"}]},
     ]
     # What retires with this node (domain article: Identity / Boundaries).
     CONTAINMENT_EDGES: ClassVar[tuple[str, ...]] = ("ENROLLS_WEBAUTHN_CREDENTIAL__duo",)
