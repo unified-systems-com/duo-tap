@@ -62,4 +62,3 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `screenlock` — Screen lock as Duo Mobile reports it (e.g. `Locked`, `Unlocked`, `Unknown`).
 - `tampered` — Jailbreak/root detection as Duo Mobile reports it (e.g. `Not tampered`, `Tampered`, `Unknown`).
 - `last_seen` — When Duo last saw the phone.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

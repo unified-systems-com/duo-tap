@@ -57,34 +57,36 @@ def seed_estate() -> Estate:
         e,
         "okta_app",
         "duo_application",
-        {"name": "Okta", "integration_type": "okta", "user_access": "PERMITTED_GROUPS"},
+        {"account_name": "Duo Federal", "name": "Okta", "integration_type": "okta", "user_access": "PERMITTED_GROUPS"},
     )
     _node(
         e,
         "admin_api",
         "duo_application",
         {
+            "account_name": "Duo Federal",
             "name": "TAP collector",
             "integration_type": "adminapi",
             "user_access": "NO_USERS",
             "adminapi_permissions": ["adminapi_read_resource", "adminapi_read_log"],
         },
     )
-    _node(e, "global", "duo_policy", {"name": "Global Policy", "is_global": True, "new_user_behavior": "deny"})
+    _node(e, "global", "duo_policy", {"account_name": "Duo Federal", "name": "Global Policy", "is_global": True, "new_user_behavior": "deny"})
     _node(
         e,
         "okta_policy",
         "duo_policy",
         {
+            "account_name": "Duo Federal",
             "name": "Okta — phishing resistant",
             "is_global": False,
             "new_user_behavior": "deny",
             "allowed_auth_methods": ["webauthn-roaming", "webauthn-platform", "duo-push"],
         },
     )
-    _node(e, "contractor_policy", "duo_policy", {"name": "Contractors", "is_global": False})
-    _node(e, "engineers", "duo_group", {"name": "engineers", "status": "Active"})
-    _node(e, "contractors", "duo_group", {"name": "contractors", "status": "Active"})
+    _node(e, "contractor_policy", "duo_policy", {"account_name": "Duo Federal", "name": "Contractors", "is_global": False})
+    _node(e, "engineers", "duo_group", {"account_name": "Duo Federal", "name": "engineers", "status": "Active"})
+    _node(e, "contractors", "duo_group", {"account_name": "Duo Federal", "name": "contractors", "status": "Active"})
 
     _node(
         e,
@@ -165,7 +167,7 @@ def seed_estate() -> Estate:
         {"epkey": "EPLAPTOP000000000001", "device_name": "alice-mbp", "trusted_endpoint": True},
     )
 
-    _node(e, "other_app", "duo_application", {"name": "Other VPN", "integration_type": "radius"})
+    _node(e, "other_app", "duo_application", {"account_name": "Other", "name": "Other VPN", "integration_type": "radius"})
     _node(e, "other_user", "duo_user", {"user_id": "DUOTHER0000000000001", "username": "mallory", "status": "bypass"})
     _node(e, "other_phone", "duo_phone", {"phone_id": "DPOTHER0000000000001", "capabilities": ["sms"]})
 

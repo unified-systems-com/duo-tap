@@ -46,7 +46,6 @@ class DuoEndpoint(BaseModel):
         "health_app_client_version": {"type": "string"},
         "health_data_last_collected": {"type": ["string", "null"]},
         "last_updated": {"type": ["string", "null"]},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
@@ -62,7 +61,6 @@ class DuoEndpoint(BaseModel):
         "firewall_status": {"validation": "jsonschema", "schema": {"type": "string"}},
         "password_status": {"validation": "jsonschema", "schema": {"type": "string"}},
         "health_app_client_version": {"validation": "jsonschema", "schema": {"type": "string"}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
     CREATE_REQUIRED: ClassVar[list[str]] = ["epkey"]
 
@@ -93,8 +91,6 @@ class DuoEndpoint(BaseModel):
     health_data_last_collected = models.DateTimeField(null=True, blank=True)
     # When Duo last updated the endpoint record.
     last_updated = models.DateTimeField(null=True, blank=True)
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_endpoint"

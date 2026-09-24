@@ -51,10 +51,10 @@ The documented read is the Admin API with an Admin API application granted *Gran
 
 ## Fields
 
-- `name` — The application's name in Duo. The natural key while applications are designed.
+- `account_name` — The name of the Duo account that holds this object (the `duo__duo_account`'s natural key). A scoping column, not a copy of the account: names are unique only within an account, so the key is (`account_name`, `name`). Traversals follow `HOLDS_ACCOUNT_OBJECT__duo`, not this column.
+- `name` — The application's name in Duo. With `account_name`, the natural key while applications are designed.
 - `integration_key` — The integration key (`DI…`), Duo's stable id for the application. Blank until observed. The secret key is never stored.
 - `integration_type` — Duo's integration type string, as reported: e.g. `okta` (Duo as Okta's authenticator), `sso-generic` / `sso-oidc-generic` (Duo SSO), `adminapi`, `authapi`, `websdk`, `rdp`, `unix`, `radius`, `ldapproxy`. An open set Duo extends; kept as a string, not an enum.
 - `user_access` — Who may authenticate: `ALL_USERS`, `NO_USERS`, or `PERMITTED_GROUPS` (only members of the groups on `PERMITS_GROUP`). Blank means not observed.
 - `adminapi_permissions` — For an `adminapi` application only: the permissions granted, by Duo's flag name (e.g. `adminapi_read_log`, `adminapi_read_resource`, `adminapi_write_resource`, `adminapi_admins`, `adminapi_integrations`, `adminapi_settings`). Null on other types or when not observed. An Admin API application is a standing credential to the MFA system itself; its grants are the blast radius.
 - `self_service_allowed` — Whether users may manage their own devices through the self-service portal from this application. Null means not observed.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

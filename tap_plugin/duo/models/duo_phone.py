@@ -45,7 +45,6 @@ class DuoPhone(BaseModel):
         "screenlock": {"type": "string"},
         "tampered": {"type": "string"},
         "last_seen": {"type": ["string", "null"]},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
@@ -64,7 +63,6 @@ class DuoPhone(BaseModel):
         "fingerprint": {"validation": "jsonschema", "schema": {"type": "string"}},
         "screenlock": {"validation": "jsonschema", "schema": {"type": "string"}},
         "tampered": {"validation": "jsonschema", "schema": {"type": "string"}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
     CREATE_REQUIRED: ClassVar[list[str]] = ["phone_id"]
 
@@ -92,8 +90,6 @@ class DuoPhone(BaseModel):
     tampered = models.CharField(max_length=255, blank=True, default="")
     # When Duo last saw the phone.
     last_seen = models.DateTimeField(null=True, blank=True)
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_phone"

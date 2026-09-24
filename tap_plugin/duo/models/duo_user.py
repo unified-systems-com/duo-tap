@@ -56,7 +56,6 @@ class DuoUser(BaseModel):
         "last_login": {"type": ["string", "null"]},
         "last_directory_sync": {"type": ["string", "null"]},
         "created": {"type": ["string", "null"]},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
@@ -73,7 +72,6 @@ class DuoUser(BaseModel):
             },
         },
         "is_enrolled": {"validation": "jsonschema", "schema": {"type": ["boolean", "null"]}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
     CREATE_REQUIRED: ClassVar[list[str]] = ["user_id"]
 
@@ -97,8 +95,6 @@ class DuoUser(BaseModel):
     last_directory_sync = models.DateTimeField(null=True, blank=True)
     # When the user was created in Duo.
     created = models.DateTimeField(null=True, blank=True)
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_user"

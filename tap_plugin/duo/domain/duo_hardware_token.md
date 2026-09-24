@@ -52,4 +52,3 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `serial` — The token's serial number.
 - `token_type` — Duo's `type`: `h6` (HOTP-6), `h8` (HOTP-8), `yk` (YubiKey AES), `d1` (Duo-D100). Blank means not observed.
 - `totp_step` — The TOTP time step in seconds, for time-based tokens; null for counter-based or not observed.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

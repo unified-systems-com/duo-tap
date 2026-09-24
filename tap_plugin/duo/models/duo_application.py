@@ -22,9 +22,10 @@ class DuoApplication(BaseModel):
     # The Duo surface this type belongs to (domain/dimensions/duo.surface.md). No dcom or
     # deployment.environment default: those belong to the observation, not the type.
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "access"}
-    # A design names the application before it exists; integration_key (DI…) is the stable id and
-    # the key moves to it when req-duo-collector makes it observable.
-    NATURAL_KEY: ClassVar[tuple[str, ...]] = ("name",)
+    # Names are unique only within an account, so the key is (account_name, name). A design names
+    # the application before it exists; integration_key (DI…) is the stable id and the key moves to
+    # (account_name, that id) when req-duo-collector makes it observable.
+    NATURAL_KEY: ClassVar[tuple[str, ...]] = ("account_name", "name")
     # Edge permission (union with the edge definitions' own sources/targets); declared so the
     # containment declaration can name it (req-grid-service-delete-cascade-12).
     OUTBOUND_EDGES: ClassVar[list[dict[str, Any]]] = [
@@ -40,17 +41,18 @@ class DuoApplication(BaseModel):
     }
 
     FIELD_CRUD_SCHEMA: ClassVar[dict[str, Any]] = {
+        "account_name": {"type": "string", "minLength": 1},
         "name": {"type": "string", "minLength": 1},
         "integration_key": {"type": "string"},
         "integration_type": {"type": "string"},
         "user_access": {"type": "string", "enum": ["", "ALL_USERS", "NO_USERS", "PERMITTED_GROUPS"]},
         "adminapi_permissions": {"type": ["array", "null"], "items": {"type": "string"}},
         "self_service_allowed": {"type": ["boolean", "null"]},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
     FIELD_VALIDATION_SCHEMA: ClassVar[dict[str, Any]] = {
+        "account_name": {"validation": "jsonschema", "schema": {"type": "string", "minLength": 1}},
         "name": {"validation": "jsonschema", "schema": {"type": "string", "minLength": 1}},
         "integration_key": {"validation": "jsonschema", "schema": {"type": "string"}},
         "integration_type": {"validation": "jsonschema", "schema": {"type": "string"}},
@@ -63,10 +65,15 @@ class DuoApplication(BaseModel):
             "schema": {"type": ["array", "null"], "items": {"type": "string"}},
         },
         "self_service_allowed": {"validation": "jsonschema", "schema": {"type": ["boolean", "null"]}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
-    CREATE_REQUIRED: ClassVar[list[str]] = ["name"]
+    CREATE_REQUIRED: ClassVar[list[str]] = ["account_name", "name"]
 
+    #: The name of the Duo account this object lives in: the duo__duo_account's natural key. A
+    #: scoping column, not a copy of the account: the account's own facts live on the account, and
+    #: HOLDS_ACCOUNT_OBJECT__duo is what a traversal follows. It is here because two accounts can
+    #: each hold an object with the same name (every account has a "Global Policy"), and the key
+    #: must tell them apart, so the fact the key rests on is a column.
+    account_name = models.CharField(max_length=255, blank=True, default="", db_index=True)
     # The application's name in Duo.
     name = models.CharField(max_length=255, blank=True, default="", db_index=True)
     # The integration key (`DI…`), Duo's stable id for the application.
@@ -80,8 +87,6 @@ class DuoApplication(BaseModel):
     adminapi_permissions = models.JSONField(null=True, blank=True, default=None)
     # Whether users may manage their own devices through the self-service portal from this application.
     self_service_allowed = models.BooleanField(null=True, blank=True, default=None)
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_application"

@@ -22,9 +22,10 @@ class DuoPolicy(BaseModel):
     # The Duo surface this type belongs to (domain/dimensions/duo.surface.md). No dcom or
     # deployment.environment default: those belong to the observation, not the type.
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "access"}
-    # A design names policies ('Global Policy', 'Okta — federal') before any exist; policy_key (PO…)
-    # is the stable id and the key moves to it when req-duo-collector makes it observable.
-    NATURAL_KEY: ClassVar[tuple[str, ...]] = ("name",)
+    # Names are unique only within an account, so the key is (account_name, name). A design names
+    # the policy before it exists; policy_key (PO…) is the stable id and the key moves to
+    # (account_name, that id) when req-duo-collector makes it observable.
+    NATURAL_KEY: ClassVar[tuple[str, ...]] = ("account_name", "name")
     DEFAULT_DISPLAY: ClassVar[dict[str, Any]] = {
         "tap_viz": {
             "shape": "round-rectangle",
@@ -34,17 +35,18 @@ class DuoPolicy(BaseModel):
     }
 
     FIELD_CRUD_SCHEMA: ClassVar[dict[str, Any]] = {
+        "account_name": {"type": "string", "minLength": 1},
         "name": {"type": "string", "minLength": 1},
         "policy_key": {"type": "string"},
         "is_global": {"type": ["boolean", "null"]},
         "new_user_behavior": {"type": "string", "enum": ["", "enroll", "no-mfa", "deny"]},
         "allowed_auth_methods": {"type": ["array", "null"], "items": {"type": "string"}},
         "sections": {"type": "object"},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
     FIELD_VALIDATION_SCHEMA: ClassVar[dict[str, Any]] = {
+        "account_name": {"validation": "jsonschema", "schema": {"type": "string", "minLength": 1}},
         "name": {"validation": "jsonschema", "schema": {"type": "string", "minLength": 1}},
         "policy_key": {"validation": "jsonschema", "schema": {"type": "string"}},
         "is_global": {"validation": "jsonschema", "schema": {"type": ["boolean", "null"]}},
@@ -57,10 +59,15 @@ class DuoPolicy(BaseModel):
             "schema": {"type": ["array", "null"], "items": {"type": "string"}},
         },
         "sections": {"validation": "jsonschema", "schema": {"type": "object"}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
-    CREATE_REQUIRED: ClassVar[list[str]] = ["name"]
+    CREATE_REQUIRED: ClassVar[list[str]] = ["account_name", "name"]
 
+    #: The name of the Duo account this object lives in: the duo__duo_account's natural key. A
+    #: scoping column, not a copy of the account: the account's own facts live on the account, and
+    #: HOLDS_ACCOUNT_OBJECT__duo is what a traversal follows. It is here because two accounts can
+    #: each hold an object with the same name (every account has a "Global Policy"), and the key
+    #: must tell them apart, so the fact the key rests on is a column.
+    account_name = models.CharField(max_length=255, blank=True, default="", db_index=True)
     # The policy's name (`policy_name`).
     name = models.CharField(max_length=255, blank=True, default="", db_index=True)
     # Duo's policy key (`PO…`).
@@ -79,8 +86,6 @@ class DuoPolicy(BaseModel):
     # `remembered_devices`, `duo_desktop`, `trusted_endpoints`, `authorized_networks`, `user_location`,
     # `screen_lock`, `operating_systems`, `browsers`, …).
     sections = models.JSONField(default=dict, blank=True)
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_policy"

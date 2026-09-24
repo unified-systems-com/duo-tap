@@ -58,4 +58,3 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `helpdesk_bypass` — Whether Help Desk administrators may generate bypass codes: `allow` (Duo's default), `limit`, or `deny`. From the account settings. Blank means not observed. A FedRAMP reviewer asks this before anything else about bypass.
 - `lockout_threshold` — Consecutive failed authentications before a user's status becomes `locked out`. Null means not observed.
 - `inactive_user_expiration` — Days of inactivity after which Duo deletes a user, from the account settings. Null means not observed; Duo reports null as well when the setting is off, so a collector must record which it saw.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
