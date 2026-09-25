@@ -13,13 +13,13 @@ from tap_grid.services import WriteOperation, create_node, delete_node, write_ba
 MINIMAL = [
     ("duo__duo_account", {"name": "acct"}, "name"),
     ("duo__duo_user", {"user_id": "DU1"}, "user_id"),
-    ("duo__duo_group", {"name": "grp"}, "name"),
+    ("duo__duo_group", {"account_name": "acct", "name": "grp"}, "name"),
     ("duo__duo_phone", {"phone_id": "DP1"}, "phone_id"),
     ("duo__duo_hardware_token", {"token_id": "DH1"}, "token_id"),
     ("duo__duo_webauthn_credential", {"webauthnkey": "WA1"}, "webauthnkey"),
     ("duo__duo_bypass_code", {"bypass_code_id": "DB1"}, "bypass_code_id"),
-    ("duo__duo_application", {"name": "app"}, "name"),
-    ("duo__duo_policy", {"name": "pol"}, "name"),
+    ("duo__duo_application", {"account_name": "acct", "name": "app"}, "name"),
+    ("duo__duo_policy", {"account_name": "acct", "name": "pol"}, "name"),
     ("duo__duo_administrator", {"admin_id": "DE1"}, "admin_id"),
     ("duo__duo_endpoint", {"epkey": "EP1"}, "epkey"),
 ]
@@ -61,7 +61,7 @@ class TestModels:
 
         req-duo-account-2, req-duo-user-2, req-duo-group-2, req-duo-phone-2, req-duo-hardware-token-2, req-duo-webauthn-credential-2, req-duo-bypass-code-2, req-duo-application-2, req-duo-policy-2, req-duo-administrator-2, req-duo-endpoint-2
         """
-        result = create_node(type_slug, {"tags": {}})
+        result = create_node(type_slug, {})
         assert not result.success
 
     def test_surface_dimension(self, type_slug, payload, required) -> None:
@@ -100,8 +100,8 @@ class TestFieldVocabulary:
 
     def test_policy_new_user_behavior_is_closed(self) -> None:
         """req-duo-policy-5: new_user_behavior is enroll / no-mfa / deny, or blank."""
-        assert create_node("duo__duo_policy", {"name": "p1", "new_user_behavior": "no-mfa"}).success
-        assert not create_node("duo__duo_policy", {"name": "p2", "new_user_behavior": "allow"}).success
+        assert create_node("duo__duo_policy", {"account_name": "acct", "name": "p1", "new_user_behavior": "no-mfa"}).success
+        assert not create_node("duo__duo_policy", {"account_name": "acct", "name": "p2", "new_user_behavior": "allow"}).success
 
     def test_enrollment_null_is_not_false(self) -> None:
         """req-duo-user-6: is_enrolled defaults to null (not observed), never false."""
@@ -138,21 +138,21 @@ class TestEdges:
         OUTBOUND_EDGES / INBOUND_EDGES is unconstrained on that side, so the refusal is proven from a
         type that declares them."""
         user = create_node("duo__duo_user", {"user_id": "DU9"}).entity_id
-        group = create_node("duo__duo_group", {"name": "g9"}).entity_id
+        group = create_node("duo__duo_group", {"account_name": "acct", "name": "g9"}).entity_id
         assert not _edge(user, group, "PERMITS_GROUP__duo").success
         assert _edge(user, group, "MEMBER_OF_GROUP__duo").success
 
     def test_enforces_policy_needs_apply_type(self) -> None:
         """req-duo-edges-3: ENFORCES_POLICY carries apply_type; unknown properties are refused."""
-        app = create_node("duo__duo_application", {"name": "a9"}).entity_id
-        pol = create_node("duo__duo_policy", {"name": "p9"}).entity_id
+        app = create_node("duo__duo_application", {"account_name": "acct", "name": "a9"}).entity_id
+        pol = create_node("duo__duo_policy", {"account_name": "acct", "name": "p9"}).entity_id
         assert not _edge(app, pol, "ENFORCES_POLICY__duo").success
         assert not _edge(app, pol, "ENFORCES_POLICY__duo", {"apply_type": "app", "colour": "green"}).success
         assert _edge(app, pol, "ENFORCES_POLICY__duo", {"apply_type": "app"}).success
 
     def test_requests_second_factor_open_source(self) -> None:
         """req-duo-edges-4: any node may request a second factor of a Duo application; fail_mode is closed."""
-        app = create_node("duo__duo_application", {"name": "okta", "integration_type": "okta"}).entity_id
+        app = create_node("duo__duo_application", {"account_name": "acct", "name": "okta", "integration_type": "okta"}).entity_id
         protected = create_node("duo__duo_endpoint", {"epkey": "EPX"}).entity_id  # any type stands in for a foreign one
         assert not _edge(protected, app, "REQUESTS_SECOND_FACTOR__duo", {"fail_mode": "open"}).success
         assert _edge(
@@ -161,8 +161,8 @@ class TestEdges:
 
     def test_issues_sso_assertion_open_target(self) -> None:
         """req-duo-edges-5: a Duo SSO application may assert to any node; protocol is required."""
-        app = create_node("duo__duo_application", {"name": "sso", "integration_type": "sso-generic"}).entity_id
-        sp = create_node("duo__duo_group", {"name": "stand-in"}).entity_id
+        app = create_node("duo__duo_application", {"account_name": "acct", "name": "sso", "integration_type": "sso-generic"}).entity_id
+        sp = create_node("duo__duo_group", {"account_name": "acct", "name": "stand-in"}).entity_id
         assert not _edge(app, sp, "ISSUES_SSO_ASSERTION__duo").success
         assert _edge(app, sp, "ISSUES_SSO_ASSERTION__duo", {"protocol": "saml"}).success
 
@@ -217,11 +217,55 @@ def test_same_name_in_two_accounts_stays_two_objects() -> None:
     req-grid-entity-natural-key-9; the key moves to Duo's own ids with req-duo-collector.)"""
     a = create_node("duo__duo_account", {"name": "one"}).entity_id
     b = create_node("duo__duo_account", {"name": "two"}).entity_id
-    ga = create_node("duo__duo_group", {"name": "engineers"}).entity_id
-    gb = create_node("duo__duo_group", {"name": "engineers"}).entity_id
+    ga = create_node("duo__duo_group", {"account_name": "one", "name": "engineers"}).entity_id
+    gb = create_node("duo__duo_group", {"account_name": "two", "name": "engineers"}).entity_id
     assert ga != gb
     assert _edge(a, ga, "HOLDS_ACCOUNT_OBJECT__duo").success
     assert _edge(b, gb, "HOLDS_ACCOUNT_OBJECT__duo").success
     assert delete_node(a, cascade="contained").success
     live = {str(x) for x in Entity.objects.filter(deleted_at__isnull=True).values_list("id", flat=True)}
     assert str(gb) in live and str(ga) not in live
+
+
+#: The name-keyed Duo types: names are unique only within an account, so each carries its account.
+SCOPED = ("duo__duo_application", "duo__duo_group", "duo__duo_policy")
+
+
+@pytest.mark.parametrize("type_slug", SCOPED)
+def test_name_keyed_types_are_scoped_by_account(type_slug) -> None:
+    """req-duo-application-4, req-duo-group-4, req-duo-policy-4: the key is (account_name, name), so
+    every account's "Global Policy" is its own object."""
+    assert _model(type_slug).NATURAL_KEY == ("account_name", "name")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("type_slug", SCOPED)
+def test_name_keyed_types_refuse_a_missing_account(type_slug) -> None:
+    """req-duo-application-2, req-duo-group-2, req-duo-policy-2: a create without its account is
+    refused, because without the account the key cannot tell two accounts' objects apart."""
+    assert not create_node(type_slug, {"name": "Global Policy"}).success
+    assert create_node(type_slug, {"account_name": "one", "name": "Global Policy"}).success
+
+
+@pytest.mark.django_db
+def test_backfill_takes_the_holding_accounts_name() -> None:
+    """Migration 0005: an object written before account_name existed takes the name of the one
+    live account holding it; an object held by two accounts is left empty rather than guessed."""
+    import importlib
+
+    from django.apps import apps as django_apps
+
+    backfill = importlib.import_module("tap_plugin.duo.migrations.0005_backfill_account_name").backfill_account_name
+    one = create_node("duo__duo_account", {"name": "one"}).entity_id
+    two = create_node("duo__duo_account", {"name": "two"}).entity_id
+    held = create_node("duo__duo_policy", {"account_name": "x", "name": "Global Policy"}).entity_id
+    shared = create_node("duo__duo_group", {"account_name": "x", "name": "everyone"}).entity_id
+    assert _edge(one, held, "HOLDS_ACCOUNT_OBJECT__duo").success
+    assert _edge(one, shared, "HOLDS_ACCOUNT_OBJECT__duo").success
+    assert _edge(two, shared, "HOLDS_ACCOUNT_OBJECT__duo").success
+    policy, group = _model("duo__duo_policy"), _model("duo__duo_group")
+    policy.all_objects.filter(entity_id=held).update(account_name="")  # as written before 0004
+    group.all_objects.filter(entity_id=shared).update(account_name="")
+    backfill(django_apps, None)
+    assert policy.all_objects.get(entity_id=held).account_name == "one"
+    assert group.all_objects.get(entity_id=shared).account_name == ""

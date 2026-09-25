@@ -53,4 +53,3 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `label` — Duo's kind label, e.g. `Security Key` (roaming) or `Touch ID` / `Windows Hello` (platform). The roaming/platform split in the factor mix reads from here.
 - `date_added` — When the credential was enrolled.
 - `date_last_used` — When the credential was last used; null if never used or not observed.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

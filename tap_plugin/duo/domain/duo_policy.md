@@ -49,10 +49,10 @@ The documented read is the Admin API with an Admin API application granted *Gran
 
 ## Fields
 
-- `name` — The policy's name (`policy_name`). The natural key while policies are designed. Duo does not require names to be unique; the design-phase key does.
+- `account_name` — The name of the Duo account that holds this object (the `duo__duo_account`'s natural key). A scoping column, not a copy of the account: names are unique only within an account, so the key is (`account_name`, `name`). Traversals follow `HOLDS_ACCOUNT_OBJECT__duo`, not this column.
+- `name` — The policy's name (`policy_name`). With `account_name`, the natural key while policies are designed. Duo does not require names to be unique within an account; the design-phase key does.
 - `policy_key` — Duo's policy key (`PO…`). Blank until observed.
 - `is_global` — True for the account's Global Policy, which every application inherits section by section unless an application or group policy overrides it. Null means not observed.
 - `new_user_behavior` — The New User Policy: what happens to an unenrolled user after primary authentication — `enroll` (Duo's default), `no-mfa` (let them in without MFA), or `deny`. Blank means not observed, or the section is inherited. `no-mfa` is a finding in any FedRAMP environment.
 - `allowed_auth_methods` — The Authentication Methods section's allowed list, as Duo names methods: `duo-push`, `duo-passcode`, `webauthn-roaming`, `webauthn-platform`, `hardware-token`, `sms`, `phonecall`, `smart-card` (Duo Federal only), `bypass`, and the passwordless `-pwl` variants. Null means not observed or inherited; an empty list means nothing is allowed.
 - `sections` — The policy's section data from the Policies API v2 verbatim (`authentication_methods`, `new_user`, `remembered_devices`, `duo_desktop`, `trusted_endpoints`, `authorized_networks`, `user_location`, `screen_lock`, `operating_systems`, `browsers`, …). Only sections the policy sets are present; an absent section is inherited. Empty means not observed.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

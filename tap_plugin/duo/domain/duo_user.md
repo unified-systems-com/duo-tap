@@ -60,4 +60,3 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `last_login` — Duo's last successful login for the user. Null means not observed, or never logged in; Duo reports null for both, so a collector records which.
 - `last_directory_sync` — When a directory sync last updated the user; null for a user managed by hand in Duo, or not observed.
 - `created` — When the user was created in Duo.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

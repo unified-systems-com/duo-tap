@@ -37,7 +37,6 @@ class DuoHardwareToken(BaseModel):
         "serial": {"type": "string"},
         "token_type": {"type": "string", "enum": ["", "h6", "h8", "yk", "d1"]},
         "totp_step": {"type": ["integer", "null"]},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
@@ -46,7 +45,6 @@ class DuoHardwareToken(BaseModel):
         "serial": {"validation": "jsonschema", "schema": {"type": "string"}},
         "token_type": {"validation": "jsonschema", "schema": {"type": "string", "enum": ["", "h6", "h8", "yk", "d1"]}},
         "totp_step": {"validation": "jsonschema", "schema": {"type": ["integer", "null"]}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
     CREATE_REQUIRED: ClassVar[list[str]] = ["token_id"]
 
@@ -58,8 +56,6 @@ class DuoHardwareToken(BaseModel):
     token_type = models.CharField(max_length=8, blank=True, default="")
     # The TOTP time step in seconds, for time-based tokens; null for counter-based or not observed.
     totp_step = models.IntegerField(null=True, blank=True, default=None)
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_hardware_token"

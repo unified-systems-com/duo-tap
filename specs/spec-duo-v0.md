@@ -84,7 +84,7 @@ Everything Duo does happens inside an account — users are enrolled in one, app
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_account.py` defines `DuoAccount(BaseModel)` with `ENTITY_TYPE = "duo__duo_account"`, `ENTITY_ICON = "duo-account"`, default dimensions none (the account spans every surface; `dcom` is stamped per observation), and fields `name`, `api_hostname`, `edition`, `helpdesk_bypass`, `lockout_threshold`, `inactive_user_expiration`, `tags`. It has no free-form `configuration` field: the Admin API settings response has no reader here and can carry secret material or personal data, so only promoted columns are stored (migration `0003_drop_unused_configuration` removed it). `NATURAL_KEY = ('name',)` — Natural key: **`name`**. A design-phase account has no observed identifier, so its name is the only fact it carries. `api_hostname` is the real stable identifier; the key moves to it when `req-duo-collector` makes it observable (spec: `req-duo-account`). Two accounts with the same name would collide today — acceptable while every account on a grid is a designed one. `CONTAINMENT_EDGES = ('HOLDS_ACCOUNT_OBJECT__duo',)`. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_account.md`.
+`tap_plugin/duo/models/duo_account.py` defines `DuoAccount(BaseModel)` with `ENTITY_TYPE = "duo__duo_account"`, `ENTITY_ICON = "duo-account"`, default dimensions none (the account spans every surface; `dcom` is stamped per observation), and fields `name`, `api_hostname`, `edition`, `helpdesk_bypass`, `lockout_threshold`, `inactive_user_expiration`. It has no free-form `configuration` field: the Admin API settings response has no reader here and can carry secret material or personal data, so only promoted columns are stored (migration `0003_drop_unused_configuration` removed it). `NATURAL_KEY = ('name',)` — Natural key: **`name`**. A design-phase account has no observed identifier, so its name is the only fact it carries. `api_hostname` is the real stable identifier; the key moves to it when `req-duo-collector` makes it observable (spec: `req-duo-account`). Two accounts with the same name would collide today — acceptable while every account on a grid is a designed one. `CONTAINMENT_EDGES = ('HOLDS_ACCOUNT_OBJECT__duo',)`. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_account.md`.
 
 #### Acceptance Criteria
 
@@ -111,7 +111,7 @@ The two questions an operator asks of MFA daily are both about users: *who is no
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_user.py` defines `DuoUser(BaseModel)` with `ENTITY_TYPE = "duo__duo_user"`, `ENTITY_ICON = "duo-user"`, default dimensions `{"duo.surface": "directory"}`, and fields `user_id`, `username`, `realname`, `email`, `status`, `is_enrolled`, `last_login`, `last_directory_sync`, `created`, `tags`. `NATURAL_KEY = ('user_id',)` — Natural key: **`user_id`**, Duo's `DU…` id, unique across Duo and stable across renames. Users are observed, never designed — a design has no reason to seed an individual user — so the id is `CREATE_REQUIRED`. Username is a mutable attribute and is deliberately not the key. `CONTAINMENT_EDGES = ('ENROLLS_WEBAUTHN_CREDENTIAL__duo', 'HOLDS_BYPASS_CODE__duo')`. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_user.md`.
+`tap_plugin/duo/models/duo_user.py` defines `DuoUser(BaseModel)` with `ENTITY_TYPE = "duo__duo_user"`, `ENTITY_ICON = "duo-user"`, default dimensions `{"duo.surface": "directory"}`, and fields `user_id`, `username`, `realname`, `email`, `status`, `is_enrolled`, `last_login`, `last_directory_sync`, `created`. `NATURAL_KEY = ('user_id',)` — Natural key: **`user_id`**, Duo's `DU…` id, unique across Duo and stable across renames. Users are observed, never designed — a design has no reason to seed an individual user — so the id is `CREATE_REQUIRED`. Username is a mutable attribute and is deliberately not the key. `CONTAINMENT_EDGES = ('ENROLLS_WEBAUTHN_CREDENTIAL__duo', 'HOLDS_BYPASS_CODE__duo')`. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_user.md`.
 
 #### Acceptance Criteria
 
@@ -137,17 +137,17 @@ Groups are how Duo expresses 'who may use this application' (`PERMITTED_GROUPS` 
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_group.py` defines `DuoGroup(BaseModel)` with `ENTITY_TYPE = "duo__duo_group"`, `ENTITY_ICON = "duo-group"`, default dimensions `{"duo.surface": "directory"}`, and fields `name`, `group_id`, `description`, `status`, `tags`. `NATURAL_KEY = ('name',)` — Natural key: **`name`** — a design knows a group's name before any exists. `group_id` is the stable id; the key moves to it with the collector. Names are unique within an account but not across accounts, a known limit of the design-phase key. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_group.md`.
+`tap_plugin/duo/models/duo_group.py` defines `DuoGroup(BaseModel)` with `ENTITY_TYPE = "duo__duo_group"`, `ENTITY_ICON = "duo-group"`, default dimensions `{"duo.surface": "directory"}`, and fields `account_name`, `name`, `group_id`, `description`, `status`. `NATURAL_KEY = ('account_name', 'name')` — Natural key: **`account_name` + `name`** — a design knows a group's name before any exists, and names are unique only within an account, so the key carries the account. `account_name` is a scoping column (the owning `duo__duo_account`'s name), not a copy of the account; `HOLDS_ACCOUNT_OBJECT__duo` is what a traversal follows. `group_id` is the stable id; the key moves to (`account_name`, `group_id`) with the collector. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_group.md`.
 
 #### Acceptance Criteria
 
 | ACID | Title | Status | Description | Notes |
 | --- | --- | :---: | --- | --- |
-| req-duo-group-1 | Created Through The Service Layer | Implemented | A `create_node` write carrying only `name` succeeds; every other field stays blank or null (not observed). | `test_created_with_only_its_required_field` |
-| req-duo-group-2 | Key Field Required | Implemented | A write without `name` is refused. | `test_required_field_enforced` |
+| req-duo-group-1 | Created Through The Service Layer | Implemented | A `create_node` write carrying only `account_name` and `name` succeeds; every other field stays blank or null (not observed). | `test_created_with_only_its_required_field` |
+| req-duo-group-2 | Key Fields Required | Implemented | A write without `name`, or without `account_name`, is refused. | `test_required_field_enforced`, `test_name_keyed_types_refuse_a_missing_account` |
 | req-duo-group-3 | Surface Dimension | Implemented | New nodes carry default dimensions `{"duo.surface": "directory"}`, and never `dcom`. | `test_surface_dimension` |
-| req-duo-group-4 | Keyed On Its Own Fields | Implemented | `NATURAL_KEY = ('name',)`, every key a model field. | `test_every_key_is_a_field` |
-| req-duo-group-5 | Same Name, Two Accounts | Implemented | Two accounts each holding a group of the same name hold two entities; retiring one account leaves the other's group live. The name key is a design-phase key and is not consulted on the write path (req-grid-entity-natural-key-9); before identity is enforced on writes, the key moves to `group_id` with the collector. | `test_same_name_in_two_accounts_stays_two_objects` |
+| req-duo-group-4 | Keyed On Its Own Fields, Scoped By Account | Implemented | `NATURAL_KEY = ('account_name', 'name')`, every key a model field. | `test_every_key_is_a_field`, `test_name_keyed_types_are_scoped_by_account` |
+| req-duo-group-5 | Same Name, Two Accounts | Implemented | Two accounts each holding a group of the same name hold two entities; retiring one account leaves the other's group live. The key carries the account, so the two groups have different keys; it is not consulted on the write path today (req-grid-entity-natural-key-9), and it moves to (`account_name`, `group_id`) with the collector. | `test_same_name_in_two_accounts_stays_two_objects` |
 
 ---
 ### Duo Phone
@@ -162,7 +162,7 @@ Most Duo factors run through a phone, and the phone's capabilities are where fac
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_phone.py` defines `DuoPhone(BaseModel)` with `ENTITY_TYPE = "duo__duo_phone"`, `ENTITY_ICON = "duo-phone"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `phone_id`, `name`, `platform`, `phone_type`, `model`, `capabilities`, `activated`, `encrypted`, `fingerprint`, `screenlock`, `tampered`, `last_seen`, `tags`. `NATURAL_KEY = ('phone_id',)` — Natural key: **`phone_id`**. Observed-only; `CREATE_REQUIRED`. The phone number is deliberately not stored (personal data, and nothing on the grid needs it). What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_phone.md`.
+`tap_plugin/duo/models/duo_phone.py` defines `DuoPhone(BaseModel)` with `ENTITY_TYPE = "duo__duo_phone"`, `ENTITY_ICON = "duo-phone"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `phone_id`, `name`, `platform`, `phone_type`, `model`, `capabilities`, `activated`, `encrypted`, `fingerprint`, `screenlock`, `tampered`, `last_seen`. `NATURAL_KEY = ('phone_id',)` — Natural key: **`phone_id`**. Observed-only; `CREATE_REQUIRED`. The phone number is deliberately not stored (personal data, and nothing on the grid needs it). What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_phone.md`.
 
 #### Acceptance Criteria
 
@@ -187,7 +187,7 @@ Hardware tokens are the factor of choice where phones are not allowed — secure
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_hardware_token.py` defines `DuoHardwareToken(BaseModel)` with `ENTITY_TYPE = "duo__duo_hardware_token"`, `ENTITY_ICON = "duo-hardware-token"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `token_id`, `serial`, `token_type`, `totp_step`, `tags`. `NATURAL_KEY = ('token_id',)` — Natural key: **`token_id`**. Observed-only. `serial` is unique only within a token type, so it is not the key. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_hardware_token.md`.
+`tap_plugin/duo/models/duo_hardware_token.py` defines `DuoHardwareToken(BaseModel)` with `ENTITY_TYPE = "duo__duo_hardware_token"`, `ENTITY_ICON = "duo-hardware-token"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `token_id`, `serial`, `token_type`, `totp_step`. `NATURAL_KEY = ('token_id',)` — Natural key: **`token_id`**. Observed-only. `serial` is unique only within a token type, so it is not the key. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_hardware_token.md`.
 
 #### Acceptance Criteria
 
@@ -211,7 +211,7 @@ FedRAMP 20x and OMB M-22-09 push toward phishing-resistant MFA; in Duo that mean
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_webauthn_credential.py` defines `DuoWebauthnCredential(BaseModel)` with `ENTITY_TYPE = "duo__duo_webauthn_credential"`, `ENTITY_ICON = "duo-webauthn"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `webauthnkey`, `credential_name`, `label`, `date_added`, `date_last_used`, `tags`. `NATURAL_KEY = ('webauthnkey',)` — Natural key: **`webauthnkey`**. Observed-only. Contained by its user (or administrator) — it never outlives them. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_webauthn_credential.md`.
+`tap_plugin/duo/models/duo_webauthn_credential.py` defines `DuoWebauthnCredential(BaseModel)` with `ENTITY_TYPE = "duo__duo_webauthn_credential"`, `ENTITY_ICON = "duo-webauthn"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `webauthnkey`, `credential_name`, `label`, `date_added`, `date_last_used`. `NATURAL_KEY = ('webauthnkey',)` — Natural key: **`webauthnkey`**. Observed-only. Contained by its user (or administrator) — it never outlives them. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_webauthn_credential.md`.
 
 #### Acceptance Criteria
 
@@ -235,7 +235,7 @@ Bypass codes are the quiet MFA exemption: a user with `active` status and a stro
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_bypass_code.py` defines `DuoBypassCode(BaseModel)` with `ENTITY_TYPE = "duo__duo_bypass_code"`, `ENTITY_ICON = "duo-bypass-code"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `bypass_code_id`, `created`, `expires`, `expiration`, `reuse_count`, `admin_email`, `tags`. `NATURAL_KEY = ('bypass_code_id',)` — Natural key: **`bypass_code_id`**. Observed-only; contained by its user. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_bypass_code.md`.
+`tap_plugin/duo/models/duo_bypass_code.py` defines `DuoBypassCode(BaseModel)` with `ENTITY_TYPE = "duo__duo_bypass_code"`, `ENTITY_ICON = "duo-bypass-code"`, default dimensions `{"duo.surface": "authenticators"}`, and fields `bypass_code_id`, `created`, `expires`, `expiration`, `reuse_count`, `admin_email`. `NATURAL_KEY = ('bypass_code_id',)` — Natural key: **`bypass_code_id`**. Observed-only; contained by its user. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_bypass_code.md`.
 
 #### Acceptance Criteria
 
@@ -259,16 +259,16 @@ Applications are the front page of Duo: each one is a system that sends its user
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_application.py` defines `DuoApplication(BaseModel)` with `ENTITY_TYPE = "duo__duo_application"`, `ENTITY_ICON = "duo-application"`, default dimensions `{"duo.surface": "access"}`, and fields `name`, `integration_key`, `integration_type`, `user_access`, `adminapi_permissions`, `self_service_allowed`, `tags`. `NATURAL_KEY = ('name',)` — Natural key: **`name`** — the design names the Okta application before it exists. `integration_key` is the stable id; the key moves to it with the collector. The secret key (`skey`) is never stored. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_application.md`.
+`tap_plugin/duo/models/duo_application.py` defines `DuoApplication(BaseModel)` with `ENTITY_TYPE = "duo__duo_application"`, `ENTITY_ICON = "duo-application"`, default dimensions `{"duo.surface": "access"}`, and fields `account_name`, `name`, `integration_key`, `integration_type`, `user_access`, `adminapi_permissions`, `self_service_allowed`. `NATURAL_KEY = ('account_name', 'name')` — Natural key: **`account_name` + `name`** — the design names the Okta application before it exists, and application names are unique only within an account. `account_name` is a scoping column (the owning account's name), not a copy of the account. `integration_key` is the stable id; the key moves to (`account_name`, `integration_key`) with the collector. The secret key (`skey`) is never stored. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_application.md`.
 
 #### Acceptance Criteria
 
 | ACID | Title | Status | Description | Notes |
 | --- | --- | :---: | --- | --- |
-| req-duo-application-1 | Created Through The Service Layer | Implemented | A `create_node` write carrying only `name` succeeds; every other field stays blank or null (not observed). | `test_created_with_only_its_required_field` |
-| req-duo-application-2 | Key Field Required | Implemented | A write without `name` is refused. | `test_required_field_enforced` |
+| req-duo-application-1 | Created Through The Service Layer | Implemented | A `create_node` write carrying only `account_name` and `name` succeeds; every other field stays blank or null (not observed). | `test_created_with_only_its_required_field` |
+| req-duo-application-2 | Key Fields Required | Implemented | A write without `name`, or without `account_name`, is refused. | `test_required_field_enforced`, `test_name_keyed_types_refuse_a_missing_account` |
 | req-duo-application-3 | Surface Dimension | Implemented | New nodes carry default dimensions `{"duo.surface": "access"}`, and never `dcom`. | `test_surface_dimension` |
-| req-duo-application-4 | Keyed On Its Own Fields | Implemented | `NATURAL_KEY = ('name',)`, every key a model field. | `test_every_key_is_a_field` |
+| req-duo-application-4 | Keyed On Its Own Fields, Scoped By Account | Implemented | `NATURAL_KEY = ('account_name', 'name')`, every key a model field. | `test_every_key_is_a_field`, `test_name_keyed_types_are_scoped_by_account` |
 
 ---
 ### Duo Policy
@@ -283,16 +283,16 @@ Policy is where Duo's security posture actually lives. The same application can 
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_policy.py` defines `DuoPolicy(BaseModel)` with `ENTITY_TYPE = "duo__duo_policy"`, `ENTITY_ICON = "duo-policy"`, default dimensions `{"duo.surface": "access"}`, and fields `name`, `policy_key`, `is_global`, `new_user_behavior`, `allowed_auth_methods`, `sections`, `tags`. `NATURAL_KEY = ('name',)` — Natural key: **`name`**. Duo itself permits duplicate policy names; the design-phase key does not, and `policy_key` replaces it with the collector. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_policy.md`.
+`tap_plugin/duo/models/duo_policy.py` defines `DuoPolicy(BaseModel)` with `ENTITY_TYPE = "duo__duo_policy"`, `ENTITY_ICON = "duo-policy"`, default dimensions `{"duo.surface": "access"}`, and fields `account_name`, `name`, `policy_key`, `is_global`, `new_user_behavior`, `allowed_auth_methods`, `sections`. `NATURAL_KEY = ('account_name', 'name')` — Natural key: **`account_name` + `name`**. Every account has a policy named "Global Policy", so a name alone would merge every account's Global Policy into one node; `account_name` (the owning account's name, a scoping column) tells them apart. Duo itself permits duplicate policy names within an account; the design-phase key does not, and (`account_name`, `policy_key`) replaces it with the collector. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_policy.md`.
 
 #### Acceptance Criteria
 
 | ACID | Title | Status | Description | Notes |
 | --- | --- | :---: | --- | --- |
-| req-duo-policy-1 | Created Through The Service Layer | Implemented | A `create_node` write carrying only `name` succeeds; every other field stays blank or null (not observed). | `test_created_with_only_its_required_field` |
-| req-duo-policy-2 | Key Field Required | Implemented | A write without `name` is refused. | `test_required_field_enforced` |
+| req-duo-policy-1 | Created Through The Service Layer | Implemented | A `create_node` write carrying only `account_name` and `name` succeeds; every other field stays blank or null (not observed). | `test_created_with_only_its_required_field` |
+| req-duo-policy-2 | Key Fields Required | Implemented | A write without `name`, or without `account_name`, is refused. | `test_required_field_enforced`, `test_name_keyed_types_refuse_a_missing_account` |
 | req-duo-policy-3 | Surface Dimension | Implemented | New nodes carry default dimensions `{"duo.surface": "access"}`, and never `dcom`. | `test_surface_dimension` |
-| req-duo-policy-4 | Keyed On Its Own Fields | Implemented | `NATURAL_KEY = ('name',)`, every key a model field. | `test_every_key_is_a_field` |
+| req-duo-policy-4 | Keyed On Its Own Fields, Scoped By Account | Implemented | `NATURAL_KEY = ('account_name', 'name')`, every key a model field. | `test_every_key_is_a_field`, `test_name_keyed_types_are_scoped_by_account` |
 | req-duo-policy-5 | New-User Behaviour Is Closed | Implemented | `new_user_behavior` accepts `enroll`, `no-mfa`, `deny`, or blank. | `test_policy_new_user_behavior_is_closed` |
 
 ---
@@ -308,7 +308,7 @@ Whoever administers Duo can put any user in bypass, issue bypass codes, or weake
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_administrator.py` defines `DuoAdministrator(BaseModel)` with `ENTITY_TYPE = "duo__duo_administrator"`, `ENTITY_ICON = "duo-administrator"`, default dimensions `{"duo.surface": "administration"}`, and fields `admin_id`, `name`, `email`, `role`, `status`, `last_login`, `restricted_by_admin_units`, `tags`. `NATURAL_KEY = ('admin_id',)` — Natural key: **`admin_id`**. Observed-only. `CONTAINMENT_EDGES = ('ENROLLS_WEBAUTHN_CREDENTIAL__duo',)`. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_administrator.md`.
+`tap_plugin/duo/models/duo_administrator.py` defines `DuoAdministrator(BaseModel)` with `ENTITY_TYPE = "duo__duo_administrator"`, `ENTITY_ICON = "duo-administrator"`, default dimensions `{"duo.surface": "administration"}`, and fields `admin_id`, `name`, `email`, `role`, `status`, `last_login`, `restricted_by_admin_units`. `NATURAL_KEY = ('admin_id',)` — Natural key: **`admin_id`**. Observed-only. `CONTAINMENT_EDGES = ('ENROLLS_WEBAUTHN_CREDENTIAL__duo',)`. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_administrator.md`.
 
 #### Acceptance Criteria
 
@@ -332,7 +332,7 @@ Device health is half of Duo's access decision in Advantage and Premier: a polic
 
 #### Implementation
 
-`tap_plugin/duo/models/duo_endpoint.py` defines `DuoEndpoint(BaseModel)` with `ENTITY_TYPE = "duo__duo_endpoint"`, `ENTITY_ICON = "duo-endpoint"`, default dimensions `{"duo.surface": "device_trust"}`, and fields `epkey`, `device_name`, `endpoint_type`, `os_family`, `os_version`, `model`, `trusted_endpoint`, `disk_encryption_status`, `firewall_status`, `password_status`, `health_app_client_version`, `health_data_last_collected`, `last_updated`, `tags`. `NATURAL_KEY = ('epkey',)` — Natural key: **`epkey`**. Observed-only. Without Duo Desktop an epkey is an aggregate (same user, OS and browser version), so counts over endpoints are counts of records, not machines. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_endpoint.md`.
+`tap_plugin/duo/models/duo_endpoint.py` defines `DuoEndpoint(BaseModel)` with `ENTITY_TYPE = "duo__duo_endpoint"`, `ENTITY_ICON = "duo-endpoint"`, default dimensions `{"duo.surface": "device_trust"}`, and fields `epkey`, `device_name`, `endpoint_type`, `os_family`, `os_version`, `model`, `trusted_endpoint`, `disk_encryption_status`, `firewall_status`, `password_status`, `health_app_client_version`, `health_data_last_collected`, `last_updated`. `NATURAL_KEY = ('epkey',)` — Natural key: **`epkey`**. Observed-only. Without Duo Desktop an epkey is an aggregate (same user, OS and browser version), so counts over endpoints are counts of records, not machines. What each field means, what is deliberately left out and what populates it: `tap_plugin/duo/domain/duo_endpoint.md`.
 
 #### Acceptance Criteria
 

@@ -50,7 +50,6 @@ class DuoAdministrator(BaseModel):
         "status": {"type": "string", "enum": ["", "Active", "Disabled", "Expired", "Pending Activation"]},
         "last_login": {"type": ["string", "null"]},
         "restricted_by_admin_units": {"type": ["boolean", "null"]},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
@@ -64,7 +63,6 @@ class DuoAdministrator(BaseModel):
             "schema": {"type": "string", "enum": ["", "Active", "Disabled", "Expired", "Pending Activation"]},
         },
         "restricted_by_admin_units": {"validation": "jsonschema", "schema": {"type": ["boolean", "null"]}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
     CREATE_REQUIRED: ClassVar[list[str]] = ["admin_id"]
 
@@ -83,8 +81,6 @@ class DuoAdministrator(BaseModel):
     last_login = models.DateTimeField(null=True, blank=True)
     # Whether the administrator's reach is limited to administrative units.
     restricted_by_admin_units = models.BooleanField(null=True, blank=True, default=None)
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_administrator"

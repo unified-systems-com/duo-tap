@@ -39,7 +39,6 @@ class DuoBypassCode(BaseModel):
         "expiration": {"type": ["string", "null"]},
         "reuse_count": {"type": ["integer", "null"]},
         "admin_email": {"type": "string"},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
@@ -48,7 +47,6 @@ class DuoBypassCode(BaseModel):
         "expires": {"validation": "jsonschema", "schema": {"type": ["boolean", "null"]}},
         "reuse_count": {"validation": "jsonschema", "schema": {"type": ["integer", "null"]}},
         "admin_email": {"validation": "jsonschema", "schema": {"type": "string"}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
     CREATE_REQUIRED: ClassVar[list[str]] = ["bypass_code_id"]
 
@@ -66,8 +64,6 @@ class DuoBypassCode(BaseModel):
     reuse_count = models.IntegerField(null=True, blank=True, default=None)
     # The email of the administrator who created the code, as reported.
     admin_email = models.CharField(max_length=255, blank=True, default="")
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_bypass_code"

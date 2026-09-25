@@ -48,8 +48,8 @@ The documented read is the Admin API with an Admin API application granted *Gran
 
 ## Fields
 
-- `name` — The group's name. The natural key while groups are designed.
+- `account_name` — The name of the Duo account that holds this object (the `duo__duo_account`'s natural key). A scoping column, not a copy of the account: names are unique only within an account, so the key is (`account_name`, `name`). Traversals follow `HOLDS_ACCOUNT_OBJECT__duo`, not this column.
+- `name` — The group's name. With `account_name`, the natural key while groups are designed.
 - `group_id` — Duo's group id (`DG…`). Blank until observed.
 - `description` — The group's description (`desc`).
 - `status` — The group's status as Duo reports it: `Active`, `Bypass` or `Disabled`. Blank means not observed. A group in `Bypass` exempts every member from MFA — the quieter sibling of a user in bypass.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

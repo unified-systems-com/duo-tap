@@ -57,4 +57,3 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `status` — As reported: `Active`, `Disabled`, `Expired` (blocked for inactivity), or `Pending Activation`. Blank means not observed.
 - `last_login` — The administrator's last Admin Panel login.
 - `restricted_by_admin_units` — Whether the administrator's reach is limited to administrative units. Null means not observed.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

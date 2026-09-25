@@ -38,7 +38,6 @@ class DuoWebauthnCredential(BaseModel):
         "label": {"type": "string"},
         "date_added": {"type": ["string", "null"]},
         "date_last_used": {"type": ["string", "null"]},
-        "tags": {"type": "object"},
     }
     # Datetime fields are typed DateTimeFields; their own validation is the right layer, so they
     # carry no JSON-Schema entry here (the CRUD schema describes only the inbound JSON shape).
@@ -46,7 +45,6 @@ class DuoWebauthnCredential(BaseModel):
         "webauthnkey": {"validation": "jsonschema", "schema": {"type": "string", "minLength": 1}},
         "credential_name": {"validation": "jsonschema", "schema": {"type": "string"}},
         "label": {"validation": "jsonschema", "schema": {"type": "string"}},
-        "tags": {"validation": "jsonschema", "schema": {"type": "object"}},
     }
     CREATE_REQUIRED: ClassVar[list[str]] = ["webauthnkey"]
 
@@ -60,8 +58,6 @@ class DuoWebauthnCredential(BaseModel):
     date_added = models.DateTimeField(null=True, blank=True)
     # When the credential was last used; null if never used or not observed.
     date_last_used = models.DateTimeField(null=True, blank=True)
-    # TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
-    tags = models.JSONField(default=dict, blank=True)
 
     class Meta(BaseModel.Meta):
         db_table = "duo__duo_webauthn_credential"

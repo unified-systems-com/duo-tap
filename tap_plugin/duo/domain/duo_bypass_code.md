@@ -53,4 +53,3 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `expiration` — When the code expires, if it does (`expires` true). Null means either no expiration or not observed; `expires` says which.
 - `reuse_count` — Remaining uses as Duo reports it; Duo's semantics for 0/null (unlimited) are recorded as reported, not reinterpreted.
 - `admin_email` — The email of the administrator who created the code, as reported. Attribution text, not a link: email is not identity, so no edge to an administrator is drawn from it.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.

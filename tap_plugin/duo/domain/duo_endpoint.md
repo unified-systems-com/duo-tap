@@ -61,4 +61,3 @@ The documented read is the Admin API with an Admin API application granted *Gran
 - `health_app_client_version` — The Duo Desktop version; blank means Duo Desktop is not reporting, so the posture fields are not observed rather than failing.
 - `health_data_last_collected` — When Duo Desktop last reported posture.
 - `last_updated` — When Duo last updated the endpoint record.
-- `tags` — TAP's tag map; derived annotations a collector or a design writes beside the observed fields.
