@@ -462,7 +462,7 @@ A reusable hub layout for any Duo account scene: the account at the centre; its 
 
 #### Implementation
 
-`tap_plugin/duo/static/duo/js/projections/account-map.js`, the standard `execute(context)` layout contract, referenced by the bundle's layout node (`js_file`). It reads entity types and edges only — never entity ids — so it serves any account on any grid. The graph panel lifts no model fields onto cy nodes, so device tiles fold by type; the strength split within a type is the posture strip's, and the Global Policy is recognised by Duo's name for it.
+`tap_plugin/duo/static/duo/js/projections/account-map.js`, the standard `execute(context)` layout contract, referenced by the bundle's layout node (`js_file`). It reads entity types, edges and model fields — never entity ids, and never a name to recover a fact — so it serves any account on any grid. Device tiles fold by type; the strength split within a type is the posture strip's. The Global Policy is the policy whose `is_global` field is true, read from the node's model fields (`node.data("fields")`, added to tap by unified-systems-com/tap#806), never from its name. On a tap core without it the fields are absent, so no policy is lifted to the top: the column is still complete, only its first row is unordered.
 
 #### Acceptance Criteria
 

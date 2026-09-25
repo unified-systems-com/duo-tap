@@ -65,10 +65,9 @@ const GEOM = {
     labelMax: 168,
 };
 
-//: The device tiles, one per enrolled-device type. The graph panel lifts no model fields onto
-//: a cy node (only name, type, dimensions and tags), so the map folds by TYPE; the capability
-//: split (Duo Push versus SMS/voice-only phones, security keys versus platform authenticators)
-//: is the posture strip's, which reads the fields.
+//: The device tiles, one per enrolled-device type. The map folds by TYPE; the capability split
+//: (Duo Push versus SMS/voice-only phones, security keys versus platform authenticators) is the
+//: posture strip's.
 const TILES = [
     {kind: "phone", type: T.phone, label: "Phones"},
     {kind: "webauthn", type: T.webauthn, label: "WebAuthn credentials"},
@@ -197,8 +196,8 @@ function _placeAccount(cy, hub, held, extraCredentials, placed, warn) {
         const idx = apps.findIndex((a) => cy.edges().some((e) => _etype(e) === E.enforces && e.source().id() === a.id() && e.target().id() === p.id()));
         return idx < 0 ? apps.length : idx;
     };
-    //: is_global is not on the cy node (see TILES); Duo names the Global Policy "Global Policy".
-    const isGlobal = (p) => /^global policy$/i.test(String(p.data("label")).trim());
+    //: The Global Policy is the one whose model says so (node fields: unified-systems-com/tap#806); never its label.
+    const isGlobal = (p) => (p.data("fields") || {}).is_global === true;
     policyNodes.sort((a, b) => (isGlobal(b) - isGlobal(a)) || (firstApp(a) - firstApp(b)) || String(a.data("label")).localeCompare(String(b.data("label"))));
     policyNodes.forEach((p, i) => put(p, polX, colY(i, policyNodes.length), GEOM.leaf));
 
