@@ -24,6 +24,12 @@ class DuoEndpoint(BaseModel):
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "device_trust"}
     # Duo's endpoint key. Observed only; see the article for what an epkey means without Duo Desktop.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("epkey",)
+    # The neutral machine behind the record (req-duo-host-link). Under the permission union
+    # (spec-grid-edge.md, req-grid-edge-constraints-3) this adds a permission and constrains nothing
+    # else. It names the foreign edge here because computing_core's edge leaves its source open.
+    OUTBOUND_EDGES: ClassVar[list[dict[str, Any]]] = [
+        {"nodes": [{"type": "computing_core__host"}], "edges": [{"type": "REPRESENTS_HOST__computing_core"}]},
+    ]
     DEFAULT_DISPLAY: ClassVar[dict[str, Any]] = {
         "tap_viz": {
             "shape": "round-rectangle",
