@@ -22,12 +22,12 @@ Stamped `duo.surface: device_trust` by default ([`duo.surface`](dimensions/duo.s
 
 ## Boundaries
 
-- **Not a neutral device.** Converging a Duo endpoint with an MDM or EDR record of the same machine needs a neutral device type (computing_core would own it); named as a gap.
+- **Not a neutral device.** The machine is `computing_core__host`; the endpoint points at it with `REPRESENTS_HOST__computing_core` (declared in `OUTBOUND_EDGES`, `req-duo-host-link`), so a Duo endpoint and an MDM or EDR record of the same machine converge. Drawn by whoever knows the match, never inferred from `device_name`.
 - **Not browsers and plugins detail.** Kept out until a view needs it.
 
 ## Neutrality
 
-**Vendor-specific record of a neutral thing.** The device is general; the epkey and posture strings are Duo's.
+**Vendor-specific record of a neutral thing.** The device is general (`computing_core__host`, reached by `REPRESENTS_HOST__computing_core`); the epkey and posture strings are Duo's.
 
 ## Observability
 
