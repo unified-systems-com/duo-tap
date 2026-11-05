@@ -1,6 +1,6 @@
 manifest_version = "0"
 plugin_version = "0.1.0" # x-release-please-version
-requires_tap = ">=0.3.0"
+requires_tap = ">=0.3.1"
 slug = "duo"
 name = "TAP Duo"
 description = "Duo multi-factor authentication as grid vocabulary: the account, its users and groups, their authenticators (phones, hardware tokens, WebAuthn credentials, bypass codes), the protected applications and the policies they enforce, administrators and endpoints — and the /duo operator page over them."
