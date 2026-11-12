@@ -45,6 +45,7 @@ ISSUES_SSO_ASSERTION__duo = "edges/ISSUES_SSO_ASSERTION.edge.json"
 # The /duo page (req-duo-page): page, account-map graph panel + projection/elevation/layout, the
 # posture strip, seven tables and their searches. No instance data.
 [grift]
+dimension = "grift/dimension.grift.json"
 duo_page = "grift/duo-page.grift.json"
 
 # In-package boot record (req-boot-bootstrap-records-in-package). Digest is the canonical sha256
