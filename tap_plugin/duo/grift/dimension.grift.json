@@ -1,0 +1,38 @@
+{
+  "metadata": {
+    "grift_version": "0"
+  },
+  "_reserved": {},
+  "batches": [
+    {
+      "batch_entity": {
+        "entity_id": "01a1d10a-e8a5-70d4-8834-563ac8c63fa2",
+        "entity_type": "batch",
+        "name": "Duo dimensions v0.1.0",
+        "dimensions": {}
+      },
+      "batch_node": {
+        "source": "plugins.duo",
+        "name": "Duo dimensions v0.1.0",
+        "description": "Dimension nodes for every dimension key the duo plugin declares, so each key has a declared node before the dimension map moves to keying by node id (tap#708, tap#711)."
+      },
+      "nodes": [
+        {
+          "entity": {
+            "entity_id": "01a1d10a-e8a5-70d4-8834-563960cd4822",
+            "entity_type": "dimension",
+            "name": "duo.surface",
+            "dimensions": {
+              "tap.meta": "dimension"
+            }
+          },
+          "node": {
+            "name": "duo.surface",
+            "description": "Which part of Duo an object or relationship belongs to: directory, authenticators, access, administration or device trust, mirroring the sections of Duo's own Admin Panel. Defined in domain/dimensions/duo.surface.md."
+          }
+        }
+      ],
+      "edges": []
+    }
+  ]
+}
