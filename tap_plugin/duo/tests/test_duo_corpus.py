@@ -8,6 +8,7 @@ from tap_plugin.duo.tests.seed import seed_estate
 
 from tap_grid.models import Edge, Entity
 from tap_grid.services import WriteOperation, create_node, delete_node, write_batch
+from tap_plugin.duo.tests.conftest import dimension_view
 
 #: (entity type, minimal create payload, the field CREATE_REQUIRED names)
 MINIMAL = [
@@ -70,7 +71,7 @@ class TestModels:
         req-duo-account-3, req-duo-user-3, req-duo-group-3, req-duo-phone-3, req-duo-hardware-token-3, req-duo-webauthn-credential-3, req-duo-bypass-code-3, req-duo-application-3, req-duo-policy-3, req-duo-administrator-3, req-duo-endpoint-3
         """
         result = create_node(type_slug, payload)
-        dims = Entity.objects.get(id=result.entity_id).dimensions
+        dims = dimension_view(Entity.objects.get(id=result.entity_id))
         assert dims.get("duo.surface") == SURFACE[type_slug]
         assert "dcom" not in dims
 
@@ -170,9 +171,9 @@ class TestEdges:
         """req-duo-edges-6: edges stamp their duo.surface; tenancy spans every surface and stamps none."""
         estate = seed_estate()
         member = Edge.objects.get(from_entity_id=estate["alice"], edge_type="MEMBER_OF_GROUP__duo")
-        assert member.entity.dimensions.get("duo.surface") == "directory"
+        assert dimension_view(member.entity).get("duo.surface") == "directory"
         tenancy = Edge.objects.filter(edge_type="HOLDS_ACCOUNT_OBJECT__duo").first()
-        assert "duo.surface" not in tenancy.entity.dimensions
+        assert "duo.surface" not in dimension_view(tenancy.entity)
 
 
 @pytest.mark.django_db
