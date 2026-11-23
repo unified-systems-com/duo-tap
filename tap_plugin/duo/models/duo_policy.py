@@ -27,8 +27,6 @@ class DuoPolicy(BaseModel):
     # the policy before it exists; policy_key (PO…) is the stable id and the key moves to
     # (account_name, that id) when req-duo-collector makes it observable.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("account_name", "name")
-    # No event time: a policy's fields and sections are settings, with no time in them.
-    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     DEFAULT_DISPLAY: ClassVar[dict[str, Any]] = {
         "tap_viz": {
             "shape": "round-rectangle",
@@ -36,6 +34,8 @@ class DuoPolicy(BaseModel):
             "label": {"valign": "bottom", "halign": "center", "position": "outside"},
         }
     }
+    # No event time: a policy's fields and sections are settings, with no time in them.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
 
     FIELD_CRUD_SCHEMA: ClassVar[dict[str, Any]] = {
         "account_name": {"type": "string", "minLength": 1},
