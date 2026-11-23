@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -24,6 +25,8 @@ class DuoAdministrator(BaseModel):
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "administration"}
     # Duo's administrator id (DE…). Observed only.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("admin_id",)
+    # No event time stored: last_login is a sighting; no creation time is kept.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     # Edge permission (union with the edge definitions' own sources/targets); declared so the
     # containment declaration can name it (req-grid-service-delete-cascade-12).
     OUTBOUND_EDGES: ClassVar[list[dict[str, Any]]] = [

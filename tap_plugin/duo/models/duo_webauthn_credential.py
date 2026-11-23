@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import Interval
 from tap_grid.models import BaseModel
 
 
@@ -24,6 +25,8 @@ class DuoWebauthnCredential(BaseModel):
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "authenticators"}
     # Duo's WebAuthn credential key (WA…). Observed only.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("webauthnkey",)
+    # Duo's `date_added` is when it was enrolled; no end is stated (date_last_used is a sighting).
+    EVENT_TIME: ClassVar[Any] = Interval("date_added", "created")
     DEFAULT_DISPLAY: ClassVar[dict[str, Any]] = {
         "tap_viz": {
             "shape": "round-rectangle",

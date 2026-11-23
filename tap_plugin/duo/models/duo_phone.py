@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -24,6 +25,8 @@ class DuoPhone(BaseModel):
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "authenticators"}
     # Duo's phone id (DP…). Phones are observed, never designed.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("phone_id",)
+    # No event time stored: last_seen is a sighting, never a start or an end.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     DEFAULT_DISPLAY: ClassVar[dict[str, Any]] = {
         "tap_viz": {
             "shape": "round-rectangle",

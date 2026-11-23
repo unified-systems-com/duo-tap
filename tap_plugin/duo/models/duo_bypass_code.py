@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import Interval
 from tap_grid.models import BaseModel
 
 
@@ -24,6 +25,8 @@ class DuoBypassCode(BaseModel):
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "authenticators"}
     # Duo's bypass-code id. Observed only; the code value is never stored.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("bypass_code_id",)
+    # Issued at `created`; Duo's `expiration` is when the code stops being valid (null: never expires).
+    EVENT_TIME: ClassVar[Any] = Interval("created", "created", end="expiration")
     DEFAULT_DISPLAY: ClassVar[dict[str, Any]] = {
         "tap_viz": {
             "shape": "round-rectangle",

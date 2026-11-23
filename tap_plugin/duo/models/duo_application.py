@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -26,6 +27,8 @@ class DuoApplication(BaseModel):
     # the application before it exists; integration_key (DI…) is the stable id and the key moves to
     # (account_name, that id) when req-duo-collector makes it observable.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("account_name", "name")
+    # No event time stored: no field holds a time; adminapi_permissions is a list of flags.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     # Edge permission (union with the edge definitions' own sources/targets); declared so the
     # containment declaration can name it (req-grid-service-delete-cascade-12).
     OUTBOUND_EDGES: ClassVar[list[dict[str, Any]]] = [
