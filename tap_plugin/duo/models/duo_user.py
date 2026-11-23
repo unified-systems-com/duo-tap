@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import Interval
 from tap_grid.models import BaseModel
 
 
@@ -25,6 +26,8 @@ class DuoUser(BaseModel):
     # Duo's own user id (DU…), stable across renames and unique across Duo. An observed user has it at
     # creation; a design that seeds a user supplies a placeholder that cannot be mistaken for Duo's.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("user_id",)
+    # Duo's `created` is the user's creation date; Duo states no end (last_login is a sighting).
+    EVENT_TIME: ClassVar[Any] = Interval("created", "created")
     # Edge permission (union with the edge definitions' own sources/targets); declared so the
     # containment declaration can name it (req-grid-service-delete-cascade-12).
     OUTBOUND_EDGES: ClassVar[list[dict[str, Any]]] = [

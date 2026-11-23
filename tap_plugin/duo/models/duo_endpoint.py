@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -24,6 +25,9 @@ class DuoEndpoint(BaseModel):
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "device_trust"}
     # Duo's endpoint key. Observed only; see the article for what an epkey means without Duo Desktop.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("epkey",)
+    # No event time stored: last_updated (record edit) and health_data_last_collected (a report)
+    # are not when the device came to be.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     DEFAULT_DISPLAY: ClassVar[dict[str, Any]] = {
         "tap_viz": {
             "shape": "round-rectangle",

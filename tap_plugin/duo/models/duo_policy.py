@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -33,6 +34,8 @@ class DuoPolicy(BaseModel):
             "label": {"valign": "bottom", "halign": "center", "position": "outside"},
         }
     }
+    # No event time: a policy's fields and sections are settings, with no time in them.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
 
     FIELD_CRUD_SCHEMA: ClassVar[dict[str, Any]] = {
         "account_name": {"type": "string", "minLength": 1},

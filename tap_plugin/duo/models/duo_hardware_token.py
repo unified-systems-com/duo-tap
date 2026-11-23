@@ -4,6 +4,7 @@ from typing import Any, ClassVar
 
 from django.db import models
 
+from tap_grid.event_time import NO_EVENT_TIME
 from tap_grid.models import BaseModel
 
 
@@ -24,6 +25,8 @@ class DuoHardwareToken(BaseModel):
     DEFAULT_DIMENSIONS: ClassVar[dict[str, str]] = {"duo.surface": "authenticators"}
     # Duo's token id (DH…). Tokens are observed, never designed.
     NATURAL_KEY: ClassVar[tuple[str, ...]] = ("token_id",)
+    # No event time: Duo's hardware token object carries no timestamp.
+    EVENT_TIME: ClassVar[Any] = NO_EVENT_TIME
     DEFAULT_DISPLAY: ClassVar[dict[str, Any]] = {
         "tap_viz": {
             "shape": "round-rectangle",
