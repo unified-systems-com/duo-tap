@@ -53,4 +53,4 @@ duo_page = "grift/duo-page.grift.json"
 [[boot.records]]
 name = "ci"
 description = "RESERVED NAME (req-boot-bootstrap-ci-record): the stack this plugin's own tests run in — depends_on closure (identity_core, pinned at a git commit) + self; network only to install those pinned sources, credential-free. The consumer flips self to editable."
-sha256 = "101e50f0c30e1040b56d06f93640a488f43499976773c62d78c004996eeddc0b"
+sha256 = "6af8f8e747df6f623e18652074af869377ac7eb7048722e28f7d0793f8c599dc"
