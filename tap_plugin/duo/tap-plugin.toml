@@ -1,6 +1,6 @@
 manifest_version = "0"
 plugin_version = "0.1.2" # x-release-please-version
-requires_tap = ">=0.4.9"
+requires_tap = ">=0.5.0"  # 0007_history_event_time depends on tap_grid 0024 (core v0.5.0: event time on history rows)
 slug = "duo"
 name = "TAP Duo"
 description = "Duo multi-factor authentication as grid vocabulary: the account, its users and groups, their authenticators (phones, hardware tokens, WebAuthn credentials, bypass codes), the protected applications and the policies they enforce, administrators and endpoints — and the /duo operator page over them."
@@ -53,4 +53,4 @@ duo_page = "grift/duo-page.grift.json"
 [[boot.records]]
 name = "ci"
 description = "RESERVED NAME (req-boot-bootstrap-ci-record): the stack this plugin's own tests run in — depends_on closure (identity_core, pinned at a git commit) + self; network only to install those pinned sources, credential-free. The consumer flips self to editable."
-sha256 = "1ffe8e0cced4c50528a81edcc57f6f8139944da362fd77dfda463513321bb451"
+sha256 = "d4ba90d9af5a88d5e989c9e39e840a340b24a67780ac583f54013835c2eebf6a"
