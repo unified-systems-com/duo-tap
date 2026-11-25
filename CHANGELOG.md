@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/unified-systems-com/duo-tap/compare/v0.1.2...v0.1.3) (2026-11-25)
+
+
+### Bug Fixes
+
+* ship the history event-time migration on the tap v0.5.0 floor ([85e564d](https://github.com/unified-systems-com/duo-tap/commit/85e564d476cf92733410e38b94e13c9d0a8f5c03))
+* ship the history event-time migration on the tap v0.5.0 floor ([fc94fb4](https://github.com/unified-systems-com/duo-tap/commit/fc94fb4b796f75ee28d6428724608412676b89c1))
+
 ## [0.1.2](https://github.com/unified-systems-com/duo-tap/compare/v0.1.1...v0.1.2) (2026-11-24)
 
 
